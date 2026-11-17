@@ -316,7 +316,7 @@ Append-only history of who changed what. No updated_at: rows are never edited.
 | `created_at` | timestamptz | no |  |
 | `id` | uuid | no | primary key |
 
-Indexes: `ix_audit_logs_entity` (entity_type, entity_id) · `ix_audit_logs_actor_agent` (actor_agent_id) · `ix_audit_logs_created` (created_at)
+Indexes: `ix_audit_logs_actor_agent` (actor_agent_id) · `ix_audit_logs_created` (created_at) · `ix_audit_logs_entity` (entity_type, entity_id)
 
 ### `automation_errors`
 
@@ -347,7 +347,7 @@ Indexes: `ix_audit_logs_entity` (entity_type, entity_id) · `ix_audit_logs_actor
 | `created_at` | timestamptz | no |  |
 | `updated_at` | timestamptz | no |  |
 
-Indexes: `ix_automation_errors_retry_due` (status, next_retry_at) · `ix_automation_errors_status_created` (status, created_at) · `uq_automation_errors_open_fingerprint` (fingerprint, unique, where status IN ('open', 'retrying', 'needs_approval')) · `uq_automation_errors_execution_node` (execution_id, node_name, unique, where execution_id IS NOT NULL)
+Indexes: `ix_automation_errors_retry_due` (status, next_retry_at) · `ix_automation_errors_status_created` (status, created_at) · `uq_automation_errors_execution_node` (execution_id, node_name, unique, where execution_id IS NOT NULL) · `uq_automation_errors_open_fingerprint` (fingerprint, unique, where status IN ('open', 'retrying', 'needs_approval'))
 
 ### `conversations`
 
@@ -383,7 +383,7 @@ Indexes: `ix_conversations_customer_status` (customer_id, status) · `ix_convers
 | `created_at` | timestamptz | no |  |
 | `updated_at` | timestamptz | no |  |
 
-Indexes: `uq_handoff_requests_one_active_per_conversation` (conversation_id, unique, where status IN ('pending', 'accepted')) · `ix_handoff_requests_status_created` (status, created_at)
+Indexes: `ix_handoff_requests_status_created` (status, created_at) · `uq_handoff_requests_one_active_per_conversation` (conversation_id, unique, where status IN ('pending', 'accepted'))
 
 ### `leads`
 
@@ -411,7 +411,7 @@ Indexes: `uq_handoff_requests_one_active_per_conversation` (conversation_id, uni
 | `created_at` | timestamptz | no |  |
 | `updated_at` | timestamptz | no |  |
 
-Indexes: `ix_leads_assigned_agent` (assigned_agent_id) · `ix_leads_temperature` (temperature) · `ix_leads_status` (status)
+Indexes: `ix_leads_assigned_agent` (assigned_agent_id) · `ix_leads_status` (status) · `ix_leads_temperature` (temperature)
 
 ### `messages`
 
@@ -436,7 +436,7 @@ Indexes: `ix_leads_assigned_agent` (assigned_agent_id) · `ix_leads_temperature`
 | `created_at` | timestamptz | no |  |
 | `updated_at` | timestamptz | no |  |
 
-Indexes: `ix_messages_reply_to` (reply_to_message_id) · `ix_messages_conversation_created` (conversation_id, created_at)
+Indexes: `ix_messages_conversation_created` (conversation_id, created_at) · `ix_messages_reply_to` (reply_to_message_id)
 
 ### `follow_up_tasks`
 
@@ -462,7 +462,7 @@ Indexes: `ix_messages_reply_to` (reply_to_message_id) · `ix_messages_conversati
 | `created_at` | timestamptz | no |  |
 | `updated_at` | timestamptz | no |  |
 
-Indexes: `ix_follow_up_tasks_status_scheduled` (status, scheduled_at) · `ix_follow_up_tasks_lead` (lead_id)
+Indexes: `ix_follow_up_tasks_lead` (lead_id) · `ix_follow_up_tasks_status_scheduled` (status, scheduled_at)
 
 ### `lead_activities`
 

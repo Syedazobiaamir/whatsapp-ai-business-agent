@@ -370,5 +370,5 @@ if __name__ == "__main__":
     for filename, wf in [("01_incoming_message.json", wf_incoming()), ("02_hot_lead_notification.json", wf_lead()),
                          ("03_human_handoff.json", wf_handoff()), ("04_follow_up_automation.json", wf_followup()),
                          ("05_error_handler.json", wf_errors()), ("09_error_drill_demo.json", wf_drill())]:
-        (OUT / filename).write_text(json.dumps(wf, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        (OUT / filename).write_text(json.dumps(wf, indent=2, ensure_ascii=False) + "\n", encoding="utf-8", newline="\n")
         print(f"wrote n8n/workflows/{filename}: {len(wf['nodes'])} nodes")

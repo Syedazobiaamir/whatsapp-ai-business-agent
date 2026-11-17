@@ -11,6 +11,9 @@ Date: 2026-11-16 · Windows 10, Python 3.12, Node 24, PostgreSQL 16 (Docker), n8
 | **UI in a real browser** (headless Edge) | 8 views at 1366 px and 390 px, 0 console errors, 0 failed API calls; click-flows: reply / resume AI / validation message / viewer read-only / error approve-resolve | pass |
 | **End-to-end** (running n8n → backend → DB) | 13 checks, run twice | **13/13 passed**, see [TEST_RESULTS_E2E.md](TEST_RESULTS_E2E.md) |
 
+## Continuous integration (GitHub Actions)
+Every push runs .github/workflows/ci.yml: backend tests on **PostgreSQL 16 and 17**, frontend tests + build, Docker image builds, compose validation (dev + production), and a check that generated files (n8n workflows, API/DB docs) are up to date. Rehearsed locally in a clean clone without .env: 197 passed, 94 % coverage.
+
 ## How we know the tests actually test something
 Each critical rule was **deliberately broken** to confirm the suite fails:
 

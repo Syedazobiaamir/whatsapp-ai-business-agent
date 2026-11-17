@@ -24,7 +24,7 @@ AUTH_HINT = {"AdminOnly": "admin", "StaffOnly": "admin, sales agent", "AnyRole":
 
 def api_docs() -> None:
     spec = app.openapi()
-    (DOCS / "openapi.json").write_text(json.dumps(spec, indent=2), encoding="utf-8")
+    (DOCS / "openapi.json").write_text(json.dumps(spec, indent=2), encoding="utf-8", newline="\n")
     groups: dict[str, list[tuple[str, str, str, str]]] = defaultdict(list)
     for path, methods in spec["paths"].items():
         for method, op in methods.items():
@@ -47,7 +47,7 @@ def api_docs() -> None:
         for method, path, sec, desc in sorted(groups[tag], key=lambda r: (r[1], r[0])):
             lines.append(f"| `{method}` | `{path}` | {sec} | {desc.replace('|', '/')} |")
         lines.append("")
-    (DOCS / "API.md").write_text("\n".join(lines), encoding="utf-8")
+    (DOCS / "API.md").write_text("\n".join(lines), encoding="utf-8", newline="\n")
     print(f"docs/API.md: {sum(len(v) for v in groups.values())} endpoints, docs/openapi.json")
 
 
@@ -104,7 +104,7 @@ def db_docs() -> None:
             if c.computed is not None:
                 notes.append("computed by PostgreSQL")
             lines.append(f"| `{c.name}` | {col_type(c)} | {'yes' if c.nullable else 'no'} | {'; '.join(notes)} |")
-        idx = [i for i in t.indexes]
+        idx = sorted(t.indexes, key=lambda i: i.name)   # a set: sort for a stable, repeatable output
         if idx:
             lines += ["", "Indexes: " + " · ".join(
                 f"`{i.name}` ({', '.join(c.name for c in i.columns)}"
@@ -112,7 +112,7 @@ def db_docs() -> None:
                 + (f", where {i.dialect_options['postgresql'].get('where')}" if i.dialect_options['postgresql'].get('where') is not None else "")
                 + ")" for i in idx)]
         lines.append("")
-    (DOCS / "DATABASE.md").write_text("\n".join(lines), encoding="utf-8")
+    (DOCS / "DATABASE.md").write_text("\n".join(lines), encoding="utf-8", newline="\n")
     print(f"docs/DATABASE.md: {len(tables)} tables, {len(rels)} relationships")
 
 

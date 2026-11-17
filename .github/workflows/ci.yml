@@ -1,0 +1,139 @@
+# Continuous Integration: runs on every push and pull request (free for public repositories).
+# Nothing here uses real secrets or paid services: WhatsApp runs in mock mode, Gemini is faked by the tests.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:            # "Run workflow" button on the Actions tab
+
+# A newer push to the same branch cancels the older, still-running check.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read                # least privilege: CI only needs to read the code
+
+jobs:
+  backend:
+    name: Backend tests (PostgreSQL ${{ matrix.postgres }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        postgres: ["16", "17"]  # dev uses 16, production uses 17: test both
+    services:
+      postgres:
+        image: postgres:${{ matrix.postgres }}-alpine
+        env:
+          POSTGRES_USER: wa_agent
+          POSTGRES_PASSWORD: ci-only-password
+          POSTGRES_DB: wa_agent
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U wa_agent" --health-interval 5s --health-timeout 3s --health-retries 20
+    env:
+      # Throw-away values that exist only inside this CI run.
+      POSTGRES_USER: wa_agent
+      POSTGRES_PASSWORD: ci-only-password
+      POSTGRES_DB: wa_agent
+      POSTGRES_HOST: 127.0.0.1
+      POSTGRES_PORT: "5432"
+      JWT_SECRET: ci-only-jwt-secret-that-is-at-least-32-chars
+      WA_MOCK_MODE: "true"
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements*.txt
+      - name: Install dependencies
+        run: pip install -r backend/requirements-dev.txt
+      - name: Run tests with coverage
+        run: python -m pytest --cov --cov-report=term --cov-report=xml -q
+      - name: Coverage summary
+        if: always()
+        run: |
+          python - <<'EOF' >> "$GITHUB_STEP_SUMMARY"
+          import xml.etree.ElementTree as ET
+          rate = float(ET.parse("coverage.xml").getroot().get("line-rate")) * 100
+          print(f"### Backend coverage (PostgreSQL ${{ matrix.postgres }}): {rate:.1f}%")
+          EOF
+
+  generated-files:
+    name: Generated files are up to date
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      JWT_SECRET: ci-only-jwt-secret-that-is-at-least-32-chars
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements*.txt
+      - run: pip install -r backend/requirements.txt
+      - name: Regenerate n8n workflows and docs
+        run: |
+          python scripts/build_n8n_workflows.py
+          python scripts/generate_docs.py
+      - name: Fail if anything changed (someone forgot to regenerate)
+        run: |
+          git diff --stat --exit-code -- n8n/workflows docs/API.md docs/DATABASE.md docs/openapi.json \
+            || { echo "::error::Generated files are out of date. Run scripts/build_n8n_workflows.py and scripts/generate_docs.py, then commit."; exit 1; }
+
+  frontend:
+    name: Frontend tests + build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      - run: npm test
+      - run: npm run build          # includes the TypeScript typecheck
+
+  docker:
+    name: Docker images + compose config
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: docker/setup-buildx-action@v4
+      - name: Build backend image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: backend/Dockerfile
+          push: false
+          tags: wa-agent-backend:ci
+          cache-from: type=gha,scope=backend
+          cache-to: type=gha,mode=max,scope=backend
+      - name: Build frontend image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: frontend/Dockerfile
+          push: false
+          tags: wa-agent-frontend:ci
+          cache-from: type=gha,scope=frontend
+          cache-to: type=gha,mode=max,scope=frontend
+      - name: Validate compose files (dev + production)
+        run: |
+          cp .env.example .env
+          docker compose --profile full config --quiet
+          DASHBOARD_DOMAIN=ci.example.com N8N_DOMAIN=n8n.ci.example.com ACME_EMAIL=ci@example.com \
+            docker compose -f docker-compose.yml -f docker-compose.prod.yml --profile full config --quiet
+          echo "compose files valid"

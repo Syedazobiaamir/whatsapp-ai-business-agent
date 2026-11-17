@@ -1,10 +1,12 @@
 # WhatsApp AI Business Agent
 
+[![CI](https://github.com/Syedazobiaamir/whatsapp-ai-business-agent/actions/workflows/ci.yml/badge.svg)](https://github.com/Syedazobiaamir/whatsapp-ai-business-agent/actions/workflows/ci.yml)
+
 **An AI sales & support agent for WhatsApp that answers customers 24/7, qualifies leads as Hot / Warm / Cold, hands difficult chats to people, follows up within the rules, and recovers from its own failures, without ever sending a message twice.**
 
 `FastAPI` · `PostgreSQL` · `Google Gemini` · `n8n` · `WhatsApp Cloud API` · `React + TypeScript + Tailwind` · `Docker`
 
-**197 backend tests (94% coverage) · 18 frontend tests · 13/13 end-to-end checks against the running stack (local and Docker)**
+**197 backend tests (94% coverage) · 18 frontend tests · 13/13 end-to-end checks against the running stack (local and Docker) · CI on every push (PostgreSQL 16 + 17, frontend, Docker builds)**
 
 | Dashboard overview | Conversation with human handoff |
 |---|---|
