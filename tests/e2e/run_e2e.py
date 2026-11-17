@@ -19,8 +19,11 @@ import httpx
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "backend"))
 
-N8N = "http://127.0.0.1:5690/webhook"
-API = "http://127.0.0.1:8000/api/v1"
+# Defaults = local dev stack. For the Docker stack: API_URL=http://127.0.0.1:8080/api/v1 (through nginx)
+# and N8N_EXEC=docker (n8n CLI inside the wa-agent-n8n container).
+N8N = os.environ.get("N8N_URL", "http://127.0.0.1:5690/webhook")
+API = os.environ.get("API_URL", "http://127.0.0.1:8000/api/v1")
+N8N_EXEC = os.environ.get("N8N_EXEC", "local")
 SECRET = os.environ["WA_APP_SECRET"]           # the running backend uses the same value
 PREFIX = "9230099"                             # all e2e customers use this phone prefix (cleaned first)
 results: list[tuple[str, bool, str]] = []
@@ -72,6 +75,12 @@ async def conversation(http, h, wa_id):
 
 
 def n8n_execute(workflow_id: str) -> bool:
+    if N8N_EXEC == "docker":
+        # Separate task-broker port: the running n8n in the same container already uses the default.
+        cmd = ["docker", "exec", "-e", "N8N_RUNNERS_BROKER_PORT=5692", "wa-agent-n8n",
+               "n8n", "execute", f"--id={workflow_id}"]
+        out = subprocess.run(cmd, capture_output=True, text=True, timeout=240)
+        return "Execution was successful" in out.stdout
     e = dict(os.environ, N8N_USER_FOLDER=str(ROOT), N8N_ENCRYPTION_KEY=env("N8N_ENCRYPTION_KEY"),
              N8N_RUNNERS_BROKER_PORT="5692", N8N_DIAGNOSTICS_ENABLED="false")
     out = subprocess.run(["cmd", "/c", f"n8n execute --id={workflow_id}"], env=e, capture_output=True,
@@ -184,9 +193,11 @@ async def main():
 
 def write_report(started):
     passed = sum(ok for _, ok, _ in results)
+    stack = ("Docker Compose: postgres + backend + nginx/frontend + n8n 2.46.4" if N8N_EXEC == "docker"
+             else "local: PostgreSQL 16 (Docker), FastAPI, n8n 2.11.3")
     lines = [
         "# End-to-end test results", "",
-        f"Run: {started:%Y-%m-%d %H:%M} UTC · stack: PostgreSQL 16 (Docker), FastAPI, n8n 2.11.3 (6 workflows) · "
+        f"Run: {started:%Y-%m-%d %H:%M} UTC · stack: {stack} (6 workflows) · "
         "WhatsApp **mock mode** · Gemini **not configured** (FAQ fallback path)", "",
         f"**{passed}/{len(results)} checks passed**", "",
         "| Check | Result | Detail |", "|---|---|---|",

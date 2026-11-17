@@ -1,0 +1,24 @@
+# Caddy = reverse proxy with AUTOMATIC HTTPS (free Let's Encrypt certificates, auto-renewed).
+# Domains come from .env: DASHBOARD_DOMAIN, N8N_DOMAIN, ACME_EMAIL.
+{
+	email {$ACME_EMAIL}
+}
+
+# Admin dashboard (nginx container serves the React app and proxies /api to FastAPI)
+{$DASHBOARD_DOMAIN} {
+	encode gzip
+	header Strict-Transport-Security "max-age=31536000; includeSubDomains"
+	reverse_proxy frontend:80
+}
+
+# n8n: Meta calls https://{$N8N_DOMAIN}/webhook/whatsapp
+{$N8N_DOMAIN} {
+	encode gzip
+	header Strict-Transport-Security "max-age=31536000; includeSubDomains"
+
+	# The error drill is a demo tool: not reachable from the internet in production.
+	@drill path /webhook/error-drill*
+	respond @drill 404
+
+	reverse_proxy n8n:5678
+}

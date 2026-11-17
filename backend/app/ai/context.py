@@ -7,7 +7,7 @@ stays small, cheap and focused.
 from dataclasses import dataclass, field
 from typing import Any
 
-from sqlalchemy import Text, cast, desc, func, select, tuple_
+from sqlalchemy import Text, cast, desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import AppSetting, BusinessFAQ, Conversation, Customer, Lead, Message, Service
@@ -79,12 +79,12 @@ async def load_context(session: AsyncSession, message: Message) -> AgentContext:
 
     # Sliding window: newest N messages up to and including this one, then oldest -> newest.
     n = int(ai_config.get("max_history_messages", 12))
-    # (created_at, seq) <= this message's: ignores messages that arrived after it.
+    # Order by seq (insertion order, ONE clock). created_at mixes Meta's whole-second timestamps
+    # (inbound) with our server clock (replies), which mis-orders messages within the same second.
     recent = (await session.scalars(
         select(Message).where(Message.conversation_id == conversation.id,
-                              tuple_(Message.created_at, Message.seq)
-                              <= tuple_(message.created_at, message.seq))
-        .order_by(Message.created_at.desc(), Message.seq.desc()).limit(n)
+                              Message.seq <= message.seq)
+        .order_by(Message.seq.desc()).limit(n)
     )).all()
 
     services = (await session.scalars(

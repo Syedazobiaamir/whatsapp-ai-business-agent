@@ -71,7 +71,7 @@ async def plan_follow_ups(session: AsyncSession, now: datetime | None = None) ->
     for lead, customer, conv in rows:
         last = await session.scalar(
             select(Message).where(Message.conversation_id == conv.id)
-            .order_by(Message.created_at.desc(), Message.seq.desc()).limit(1))
+            .order_by(Message.seq.desc()).limit(1))
         if last is None or last.direction != MessageDirection.OUTBOUND:
             continue                                  # customer spoke last: no chasing needed
         done = await session.scalar(select(func.count()).select_from(FollowUpTask).where(

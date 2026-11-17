@@ -49,7 +49,7 @@ class Conversation(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     # (selectinload), so we never trigger hidden slow queries in a loop.
     customer: Mapped["Customer"] = relationship(lazy="raise")
     messages: Mapped[list["Message"]] = relationship(
-        lazy="raise", order_by="(Message.created_at, Message.seq)", passive_deletes=True
+        lazy="raise", order_by="Message.seq", passive_deletes=True
     )
 
     __table_args__ = (

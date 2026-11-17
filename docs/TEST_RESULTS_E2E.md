@@ -1,6 +1,6 @@
 # End-to-end test results
 
-Run: 2026-11-16 14:43 UTC · stack: PostgreSQL 16 (Docker), FastAPI, n8n 2.11.3 (6 workflows) · WhatsApp **mock mode** · Gemini **not configured** (FAQ fallback path)
+Run: 2026-11-17 05:14 UTC · stack: Docker Compose: postgres + backend + nginx/frontend + n8n 2.46.4 (6 workflows) · WhatsApp **mock mode** · Gemini **not configured** (FAQ fallback path)
 
 **13/13 checks passed**
 

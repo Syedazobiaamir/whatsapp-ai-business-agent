@@ -1,0 +1,53 @@
+# Production overrides (on a Linux server). Use together with docker-compose.yml:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml --profile full up -d --build
+# Differences from local: HTTPS via Caddy, nothing published except ports 80/443,
+# PostgreSQL 17 (recommended by n8n; the full test suite passes on 17), production app settings.
+services:
+  postgres:
+    image: postgres:17-alpine          # fresh installs only - an existing 16 volume needs dump/restore
+    ports: !reset []                    # database never reachable from outside
+
+  db-init:
+    image: postgres:17-alpine
+
+  backend:
+    environment:
+      APP_ENV: production               # hides /docs, refuses mock mode, requires WhatsApp credentials
+      WA_MOCK_MODE: "false"
+      FRONTEND_URL: https://${DASHBOARD_DOMAIN}
+      SEED_ON_START: ${SEED_ON_START:-true}
+
+  frontend:
+    ports: !reset []                    # only Caddy talks to it
+
+  n8n:
+    ports: !reset []
+    environment:
+      WEBHOOK_URL: https://${N8N_DOMAIN}/
+      N8N_EDITOR_BASE_URL: https://${N8N_DOMAIN}/
+      N8N_SECURE_COOKIE: "true"
+      N8N_PROXY_HOPS: "1"               # trust Caddy's X-Forwarded-* headers
+
+  caddy:
+    image: caddy:2.10-alpine
+    container_name: wa-agent-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"                         # Let's Encrypt HTTP challenge + redirect to HTTPS
+      - "443:443"
+    environment:
+      DASHBOARD_DOMAIN: ${DASHBOARD_DOMAIN}
+      N8N_DOMAIN: ${N8N_DOMAIN}
+      ACME_EMAIL: ${ACME_EMAIL}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data                # certificates - keep this volume
+      - caddy_config:/config
+    depends_on:
+      frontend: { condition: service_healthy }
+      n8n: { condition: service_healthy }
+    profiles: ["full"]
+
+volumes:
+  caddy_data:
+  caddy_config:

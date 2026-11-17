@@ -116,7 +116,7 @@ async def assign(handoff_id: uuid.UUID, session: SessionDep, settings: SettingsD
     conv = await session.get(Conversation, handoff.conversation_id)
     customer = await session.get(Customer, conv.customer_id)
     last = (await session.scalars(select(Message).where(Message.conversation_id == conv.id)
-                                  .order_by(Message.created_at.desc(), Message.seq.desc()).limit(5))).all()
+                                  .order_by(Message.seq.desc()).limit(5))).all()
     transcript = "\n".join(f"{m.sender_type.value}: {(m.body or '')[:200]}" for m in reversed(last))
     to = agent.email if agent else settings.admin_alert_email
     return {
@@ -142,7 +142,7 @@ async def conversation_assignee(conversation_id: uuid.UUID, session: SessionDep,
     agent = await session.get(HumanAgent, conv.assigned_agent_id) if conv.assigned_agent_id else None
     last = await session.scalar(select(Message).where(Message.conversation_id == conv.id,
                                                       Message.direction == MessageDirection.INBOUND)
-                                .order_by(Message.created_at.desc(), Message.seq.desc()).limit(1))
+                                .order_by(Message.seq.desc()).limit(1))
     return {"to": agent.email if agent else settings.admin_alert_email,
             "subject": f"New WhatsApp message from {customer.name or customer.wa_id}",
             "body": f"{customer.name or customer.wa_id}: {(last.body if last else '')[:500]}\n\n"

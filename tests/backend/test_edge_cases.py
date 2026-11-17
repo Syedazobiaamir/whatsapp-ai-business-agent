@@ -145,6 +145,34 @@ async def test_new_customers_work_with_generic_query_plans(session):
     assert await session.scalar(select(func.count()).select_from(Message)) == 3
 
 
+async def test_order_follows_arrival_not_mixed_clocks(signed, client, session, make_agent):
+    """Regression (found by the Docker end-to-end test).
+
+    Customer messages carry Meta's WHOLE-SECOND timestamp; our replies use the server clock.
+    Reply saved at 12:00:00.400 between two customer messages both stamped 12:00:00 must still
+    appear between them (insertion order), not after the second one."""
+    from datetime import UTC, datetime
+
+    from app.models import Conversation
+    from app.models.enums import SendStatus, SenderType
+
+    first = payload("first", "wamid.ORD.1")
+    first["entry"][0]["changes"][0]["value"]["messages"][0]["timestamp"] = "1763294400"   # 12:00:00
+    await signed(first)
+    conv = await session.scalar(select(Conversation))
+    session.add(Message(conversation_id=conv.id, direction=MessageDirection.OUTBOUND, sender_type=SenderType.AI,
+                        body="reply", send_status=SendStatus.SENT,
+                        created_at=datetime(2026, 11, 16, 12, 0, 0, 400000, tzinfo=UTC)))
+    await session.commit()
+    second = payload("second", "wamid.ORD.2")
+    second["entry"][0]["changes"][0]["value"]["messages"][0]["timestamp"] = "1763294400"  # same second
+    await signed(second)
+
+    _, h = await make_agent(AgentRole.VIEWER)
+    detail = (await client.get(f"/api/v1/conversations/{conv.id}", headers=h)).json()
+    assert [m["body"] for m in detail["messages"]] == ["first", "reply", "second"]
+
+
 async def test_database_down_gives_clean_error(client, monkeypatch):
     """Health reports 'degraded' (503) instead of crashing when the DB is unreachable."""
     from app.db import get_session

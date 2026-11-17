@@ -64,7 +64,7 @@ async def list_conversations(
             select(Message.conversation_id, Message.body)
             .where(Message.conversation_id.in_(ids))
             .distinct(Message.conversation_id)               # PostgreSQL DISTINCT ON
-            .order_by(Message.conversation_id, Message.created_at.desc(), Message.seq.desc())
+            .order_by(Message.conversation_id, Message.seq.desc())
         )
         previews = {cid: (body or "")[:120] for cid, body in last_msgs}
         handoffs = set((await session.scalars(

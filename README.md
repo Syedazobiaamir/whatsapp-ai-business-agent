@@ -18,6 +18,13 @@ tests/               Automated tests + sample webhook payloads
 scripts/             PowerShell helper scripts
 ```
 
+## Run everything with Docker
+```powershell
+docker compose --profile full up -d --build    # postgres + backend + dashboard (nginx) + n8n
+start http://127.0.0.1:8080                    # dashboard  (n8n: http://127.0.0.1:5690)
+```
+Production (HTTPS with Caddy, PostgreSQL 17, mock mode refused): see [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
+
 ## Quick start (development)
 ```powershell
 Copy-Item .env.example .env    # then edit the values in .env
