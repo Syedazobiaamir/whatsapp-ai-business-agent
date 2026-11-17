@@ -1,4 +1,4 @@
-import { Activity, Bot, LayoutDashboard, LogOut, Menu, MessageSquare, Settings, Users, Workflow, X } from "lucide-react";
+import { Activity, BarChart3, Bot, LayoutDashboard, LogOut, Menu, MessageSquare, Settings, Users, Workflow, X } from "lucide-react";
 import { useState } from "react";
 import { NavLink, Outlet } from "react-router";
 import { useAuth } from "../auth";
@@ -8,6 +8,7 @@ const NAV = [
   { to: "/", text: "Overview", icon: LayoutDashboard, end: true },
   { to: "/leads", text: "Leads", icon: Activity },
   { to: "/conversations", text: "Conversations", icon: MessageSquare },
+  { to: "/analytics", text: "Analytics", icon: BarChart3 },
   { to: "/automation", text: "Automation", icon: Workflow },
   { to: "/settings", text: "Settings", icon: Settings },
   { to: "/team", text: "Team", icon: Users },

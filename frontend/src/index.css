@@ -13,6 +13,13 @@
   --color-brand-ink: #ffffff;
   --color-viz: #2a78d6;
   --color-viz-track: #e9eef6;
+  /* Stage 15 chart colors (validated with the dataviz palette checker, light + dark) */
+  --color-series-1: #2a78d6;   /* categorical slot 1: AI replies */
+  --color-series-2: #eb6834;   /* categorical slot 2: team replies */
+  --color-ord-1: #86b6ef;      /* ordinal ramp: cold (step 250) */
+  --color-ord-2: #2a78d6;      /* warm (450) */
+  --color-ord-3: #104281;      /* hot (650) */
+  --color-grid: #ecebe7;
   --font-sans: ui-sans-serif, system-ui, "Segoe UI", Roboto, sans-serif;
 }
 
@@ -27,6 +34,12 @@
     --color-brand: #3987e5;
     --color-viz: #3987e5;
     --color-viz-track: #26303d;
+    --color-series-1: #3987e5;
+    --color-series-2: #d95926;
+    --color-ord-1: #184f95;      /* dark: cold = step 600 */
+    --color-ord-2: #3987e5;      /* warm = 400 */
+    --color-ord-3: #9ec5f4;      /* hot = 200 (lightest = most prominent on dark) */
+    --color-grid: #2a2a28;
     color-scheme: dark;
   }
 }

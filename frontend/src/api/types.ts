@@ -203,3 +203,23 @@ export interface AgentStatus {
   webhook_signature_check: boolean;
   graph_api_version: string;
 }
+
+// Stage 15: GET /stats/analytics
+export interface AnalyticsDay {
+  day: string; inbound: number; ai_replies: number; human_replies: number;
+  new_leads_hot: number; new_leads_warm: number; new_leads_cold: number; handoffs: number;
+}
+export interface Analytics {
+  days: number;
+  timezone: string;
+  daily: AnalyticsDay[];
+  totals: {
+    inbound: number; ai_replies: number; human_replies: number; ai_share: number | null;
+    conversations_started: number; handoffs: number; handoff_rate: number | null;
+    fallback_replies: number; guardrail_blocks: number; new_leads: number;
+  };
+  response_time: { median_seconds: number | null; p90_seconds: number | null; samples: number };
+  intents: { name: string; count: number }[];
+  languages: { name: string; count: number }[];
+  win_rate_by_temperature: { name: string; won: number; total: number }[];
+}

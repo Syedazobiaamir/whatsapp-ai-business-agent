@@ -6,7 +6,7 @@
 
 `FastAPI` · `PostgreSQL` · `Google Gemini` · `n8n` · `WhatsApp Cloud API` · `React + TypeScript + Tailwind` · `Docker`
 
-**224 backend tests (94% coverage) · 18 frontend tests · 13/13 end-to-end checks against the running stack (local and Docker) · CI on every push (PostgreSQL 16 + 17, frontend, Docker builds)**
+**233 backend tests (94% coverage) · 22 frontend tests · 13/13 end-to-end checks against the running stack (local and Docker) · CI on every push (PostgreSQL 16 + 17, frontend, Docker builds)**
 
 | Dashboard overview | Conversation with human handoff |
 |---|---|
@@ -23,6 +23,7 @@
 | **Follow-ups that respect the rules** | Marketing consent (STOP/START), WhatsApp's 24-hour window and templates, and **human approval** before anything is sent |
 | **Self-healing automation** | Errors are grouped and classified; safe ones retry with backoff; risky ones (could duplicate a message) need **admin approval**, and every decision is audited |
 | **Speaks your customers' language** | English, **Urdu (اردو)** and **Roman Urdu** are detected automatically; FAQ answers, handoff and opt-out messages and price guardrails all work in each language, and Urdu shows right-to-left on the dashboard |
+| **Analytics that answer owner questions** | Messages per day, AI vs team replies, median response time, handoff rate, new leads by temperature, win rate per temperature, top intents and languages, with days counted in the business timezone |
 | **One dashboard** | Overview, Leads, Conversations, Automation monitoring, Settings (FAQ, AI, rules), Team; roles admin / sales agent / viewer |
 
 ## Architecture
@@ -46,6 +47,10 @@ flowchart LR
 **Live n8n monitoring on the dashboard** (workflow status + execution history, including automatic `retry` runs):
 
 ![Automation monitoring](docs/screenshots/automation-monitoring.png)
+
+**Analytics** (last 30 days, hover tooltips, table view for every chart):
+
+![Analytics](docs/screenshots/analytics.png)
 
 **An Urdu conversation** (right-to-left, language detected automatically):
 

@@ -40,6 +40,10 @@ Each critical rule was **deliberately broken** to confirm the suite fails:
 ## Urdu and Roman Urdu (Stage 14)
 27 tests: language detection (incl. greetings like AOA / Assalam o alaikum), Urdu and Roman Urdu FAQ fallback, handoff phrases and replies in 3 languages, STOP confirmation in the remembered language, Urdu-aware price guardrail. Two bugs found while building it: greetings were not recognised, and the old guardrail read the end of "hours 9" as the amount "rs 9" (fixed + regression test).
 
+## Analytics (Stage 15)
+9 backend tests: days counted in the business timezone (a message at 00:30 Karachi = 19:30 UTC the day before must land on Karachi "today"; a mutation test switching to UTC days made this test fail, so it really guards the rule), totals/rates, median response time, intents/languages/win rate, empty database gives zeros, unknown timezone falls back to UTC, 1-365 day limits, login required. 4 frontend tests for the axis scale and duration format.
+Bugs found while building it: Python's zoneinfo has no timezone data on Windows and rejected "Asia/Karachi" (now PostgreSQL validates the zone), and the chart axis for 130 messages went to 400 (bars filled a third of the chart; fixed and tested).
+
 ## Edge cases & abuse tested
 10 identical webhooks **in parallel** → 1 message · 5 parallel AI calls → 1 reply · Urdu / emoji round-trip · 3 MB+ payload → 413 · unsigned or forged webhook → 401, nothing stored · `alg: none` JWT → 401 · SQL-injection / `%` / `<script>` search strings → harmless (parameterised queries) · reply > 4096 chars or blank → 422 · database down → `/health` 503 instead of a crash
 

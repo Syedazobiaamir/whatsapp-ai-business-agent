@@ -82,3 +82,10 @@ Required folder structure ✅ · tests for webhook verification, incoming proces
 | Price guardrail understands Urdu digits, روپے/rupay, hazar/lakh | `guardrails.py` | `test_guardrail_understands_urdu_amounts` | ✅ |
 | Right-to-left display on the dashboard | `dir="auto"` | browser check: bubbles `rtl` | ✅ |
 | Gemini told the customer's language | prompt line | `test_prompt_tells_gemini_the_language` | 🟡 live needs Gemini key |
+
+## Extra (Stage 15): Analytics page
+| Requirement | Where | Evidence | Status |
+|---|---|---|---|
+| Daily trends in business timezone | `GET /stats/analytics` | `test_days_are_counted_in_business_timezone` + mutation test | ✅ |
+| AI share, handoff rate, response time, win rate | same endpoint | `test_analytics.py` (9 tests) | ✅ |
+| Accessible charts (legend, tooltip, table view, light/dark) | `components/charts.tsx` | browser check + screenshot | ✅ |

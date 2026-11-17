@@ -7,6 +7,7 @@ import Layout from "./components/Layout";
 import { Spinner } from "./components/ui";
 import "./index.css";
 import Automation from "./pages/Automation";
+import AnalyticsPage from "./pages/Analytics";
 import ConversationsPage from "./pages/Conversations";
 import LeadDetailPage from "./pages/LeadDetail";
 import LeadsPage from "./pages/Leads";
@@ -37,7 +38,8 @@ createRoot(document.getElementById("root")!).render(
               <Route index element={<Overview />} />
               <Route path="leads" element={<LeadsPage />} />
               <Route path="leads/:id" element={<LeadDetailPage />} />
-              <Route path="conversations" element={<ConversationsPage />} />
+              <Route path="analytics" element={<AnalyticsPage />} />
+          <Route path="conversations" element={<ConversationsPage />} />
               <Route path="conversations/:id" element={<ConversationsPage />} />
               <Route path="automation" element={<Automation />} />
               <Route path="settings" element={<SettingsPage />} />

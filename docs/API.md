@@ -2,7 +2,7 @@
 
 _Generated from the FastAPI code by `scripts/generate_docs.py`. Interactive version: `http://127.0.0.1:8000/docs` (development only). Machine-readable: [openapi.json](openapi.json)._
 
-**57 endpoints.** Base path `/api/v1`. Dashboard calls send `Authorization: Bearer <JWT>` from `POST /api/v1/auth/login`; roles are enforced on the server (admin · sales agent · viewer).
+**58 endpoints.** Base path `/api/v1`. Dashboard calls send `Authorization: Bearer <JWT>` from `POST /api/v1/auth/login`; roles are enforced on the server (admin · sales agent · viewer).
 
 ## ai agent
 
@@ -41,6 +41,7 @@ _Generated from the FastAPI code by `scripts/generate_docs.py`. Interactive vers
 | Method | Path | Auth | Purpose |
 |---|---|---|---|
 | `GET` | `/api/v1/audit-logs` | JWT | Audit Logs |
+| `GET` | `/api/v1/stats/analytics` | JWT | Analytics |
 | `GET` | `/api/v1/stats/overview` | JWT | Overview |
 
 ## development

@@ -3,6 +3,7 @@ from fastapi import APIRouter
 
 from app.api.v1 import (
     agent,
+    analytics,
     auth,
     conversations,
     customers,
@@ -20,6 +21,6 @@ from app.api.v1 import (
 )
 
 api_router = APIRouter()
-for module in (auth, team, customers, leads, conversations, handoffs, knowledge, settings, stats,
+for module in (auth, analytics, team, customers, leads, conversations, handoffs, knowledge, settings, stats,
                followups, monitoring, webhooks, agent, internal, dev):
     api_router.include_router(module.router)

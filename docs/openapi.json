@@ -94,6 +94,56 @@
         ]
       }
     },
+    "/api/v1/stats/analytics": {
+      "get": {
+        "tags": [
+          "dashboard"
+        ],
+        "summary": "Analytics",
+        "operationId": "analytics_api_v1_stats_analytics_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "days",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 365,
+              "minimum": 1,
+              "default": 30,
+              "title": "Days"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Analytics"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/team": {
       "get": {
         "tags": [
@@ -3620,6 +3670,64 @@
         "title": "AgentUpdate",
         "description": "Every field optional: only the fields sent are changed (a \"partial update\")."
       },
+      "Analytics": {
+        "properties": {
+          "days": {
+            "type": "integer",
+            "title": "Days"
+          },
+          "timezone": {
+            "type": "string",
+            "title": "Timezone"
+          },
+          "daily": {
+            "items": {
+              "$ref": "#/components/schemas/DayRow"
+            },
+            "type": "array",
+            "title": "Daily"
+          },
+          "totals": {
+            "$ref": "#/components/schemas/Totals"
+          },
+          "response_time": {
+            "$ref": "#/components/schemas/ResponseTime"
+          },
+          "intents": {
+            "items": {
+              "$ref": "#/components/schemas/CountRow"
+            },
+            "type": "array",
+            "title": "Intents"
+          },
+          "languages": {
+            "items": {
+              "$ref": "#/components/schemas/CountRow"
+            },
+            "type": "array",
+            "title": "Languages"
+          },
+          "win_rate_by_temperature": {
+            "items": {
+              "$ref": "#/components/schemas/RateRow"
+            },
+            "type": "array",
+            "title": "Win Rate By Temperature"
+          }
+        },
+        "type": "object",
+        "required": [
+          "days",
+          "timezone",
+          "daily",
+          "totals",
+          "response_time",
+          "intents",
+          "languages",
+          "win_rate_by_temperature"
+        ],
+        "title": "Analytics"
+      },
       "AuditLogOut": {
         "properties": {
           "id": {
@@ -4125,6 +4233,24 @@
         ],
         "title": "ConversationStatus"
       },
+      "CountRow": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "count"
+        ],
+        "title": "CountRow"
+      },
       "CustomerOut": {
         "properties": {
           "id": {
@@ -4304,6 +4430,55 @@
         },
         "type": "object",
         "title": "CustomerUpdate"
+      },
+      "DayRow": {
+        "properties": {
+          "day": {
+            "type": "string",
+            "format": "date",
+            "title": "Day"
+          },
+          "inbound": {
+            "type": "integer",
+            "title": "Inbound"
+          },
+          "ai_replies": {
+            "type": "integer",
+            "title": "Ai Replies"
+          },
+          "human_replies": {
+            "type": "integer",
+            "title": "Human Replies"
+          },
+          "new_leads_hot": {
+            "type": "integer",
+            "title": "New Leads Hot"
+          },
+          "new_leads_warm": {
+            "type": "integer",
+            "title": "New Leads Warm"
+          },
+          "new_leads_cold": {
+            "type": "integer",
+            "title": "New Leads Cold"
+          },
+          "handoffs": {
+            "type": "integer",
+            "title": "Handoffs"
+          }
+        },
+        "type": "object",
+        "required": [
+          "day",
+          "inbound",
+          "ai_replies",
+          "human_replies",
+          "new_leads_hot",
+          "new_leads_warm",
+          "new_leads_cold",
+          "handoffs"
+        ],
+        "title": "DayRow"
       },
       "ErrorStatus": {
         "type": "string",
@@ -6026,6 +6201,29 @@
         ],
         "title": "ProcessRequest"
       },
+      "RateRow": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "won": {
+            "type": "integer",
+            "title": "Won"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "won",
+          "total"
+        ],
+        "title": "RateRow"
+      },
       "ReplyRequest": {
         "properties": {
           "text": {
@@ -6052,6 +6250,43 @@
         },
         "type": "object",
         "title": "ResolutionIn"
+      },
+      "ResponseTime": {
+        "properties": {
+          "median_seconds": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Median Seconds"
+          },
+          "p90_seconds": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "P90 Seconds"
+          },
+          "samples": {
+            "type": "integer",
+            "title": "Samples"
+          }
+        },
+        "type": "object",
+        "required": [
+          "median_seconds",
+          "p90_seconds",
+          "samples"
+        ],
+        "title": "ResponseTime"
       },
       "RiskLevel": {
         "type": "string",
@@ -6422,6 +6657,78 @@
           "expires_in"
         ],
         "title": "TokenResponse"
+      },
+      "Totals": {
+        "properties": {
+          "inbound": {
+            "type": "integer",
+            "title": "Inbound"
+          },
+          "ai_replies": {
+            "type": "integer",
+            "title": "Ai Replies"
+          },
+          "human_replies": {
+            "type": "integer",
+            "title": "Human Replies"
+          },
+          "ai_share": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ai Share"
+          },
+          "conversations_started": {
+            "type": "integer",
+            "title": "Conversations Started"
+          },
+          "handoffs": {
+            "type": "integer",
+            "title": "Handoffs"
+          },
+          "handoff_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Handoff Rate"
+          },
+          "fallback_replies": {
+            "type": "integer",
+            "title": "Fallback Replies"
+          },
+          "guardrail_blocks": {
+            "type": "integer",
+            "title": "Guardrail Blocks"
+          },
+          "new_leads": {
+            "type": "integer",
+            "title": "New Leads"
+          }
+        },
+        "type": "object",
+        "required": [
+          "inbound",
+          "ai_replies",
+          "human_replies",
+          "ai_share",
+          "conversations_started",
+          "handoffs",
+          "handoff_rate",
+          "fallback_replies",
+          "guardrail_blocks",
+          "new_leads"
+        ],
+        "title": "Totals"
       },
       "ValidationError": {
         "properties": {
