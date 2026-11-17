@@ -1,0 +1,49 @@
+# Test results
+
+Date: 2026-11-16 · Windows 10, Python 3.12, Node 24, PostgreSQL 16 (Docker), n8n 2.11.3
+
+| Suite | What it covers | Result |
+|---|---|---|
+| **Backend unit + integration** (pytest, real PostgreSQL test DB) | DB constraints & migrations, auth/JWT/RBAC, dashboard APIs, WhatsApp webhook (verify, signature, parsing, dedupe), sending + retry rules, AI orchestration (fake Gemini), real Gemini client code (fake SDK), lead qualification, guardrails, n8n endpoints, follow-ups, handoffs, error recovery, edge cases | **194 passed** |
+| **Backend coverage** | `pytest --cov` (greenlet-aware, see `.coveragerc`) | **94 %** of 2,909 statements |
+| **Frontend unit** (Vitest) | API client (auth header, 401 sign-out, error formatting), helpers | **18 passed** |
+| **Frontend build** | `tsc --noEmit` + `vite build` | pass |
+| **UI in a real browser** (headless Edge) | 8 views at 1366 px and 390 px, 0 console errors, 0 failed API calls; click-flows: reply / resume AI / validation message / viewer read-only / error approve-resolve | pass |
+| **End-to-end** (running n8n → backend → DB) | 13 checks, run twice | **13/13 passed**, see [TEST_RESULTS_E2E.md](TEST_RESULTS_E2E.md) |
+
+## How we know the tests actually test something
+Each critical rule was **deliberately broken** to confirm the suite fails:
+
+| Rule broken on purpose | Tests that failed |
+|---|---|
+| Webhook signature check removed | 6 |
+| WhatsApp client retries every error | 3 |
+| AI ignores "human mode" | 1 |
+| Price guardrail removed | 1 |
+| Risky errors treated as safe | 3 |
+| Error grouping removed | 3 |
+| Atomic "claim" removed (5 parallel requests → **5 replies**) | 1 |
+
+## Bugs found by testing (and fixed)
+| Bug | Found by | Fix |
+|---|---|---|
+| `ON CONFLICT … WHERE status = $1` fails after PostgreSQL switches to a **generic query plan** (from the 6th new customer on a pooled connection) | **End-to-end test**; invisible to unit tests | Literal predicate `status = 'open'`; regression test forces generic plans; whole suite re-run with `plan_cache_mode=force_generic_plan` (194 pass) |
+| Messages sent in the same second shown to the AI in random order | Unit test (Stage 6) | `seq` identity column for stable ordering |
+| Validation message lost the field name | Browser click-test (Stage 8) | Error formatter fixed + frontend unit test |
+| n8n's friendly error texts not classified | Live error drill (Stage 9) | Patterns + exact messages as tests |
+| 74 s test run (`localhost` → IPv6 timeout) | Timing (Stage 3) | `127.0.0.1` → 11 s |
+| Coverage under-reported (76 % instead of 94 %) | Suspicious numbers (Stage 10) | `concurrency = thread,greenlet` |
+
+## Edge cases & abuse tested
+10 identical webhooks **in parallel** → 1 message · 5 parallel AI calls → 1 reply · Urdu / emoji round-trip · 3 MB+ payload → 413 · unsigned or forged webhook → 401, nothing stored · `alg: none` JWT → 401 · SQL-injection / `%` / `<script>` search strings → harmless (parameterised queries) · reply > 4096 chars or blank → 422 · database down → `/health` 503 instead of a crash
+
+## Not tested (needs real accounts)
+Real Meta delivery and status webhooks · real Gemini answers (the client code is tested against a fake SDK) · Gmail sending (the `log` channel is tested) · n8n automatic execution retry against the real n8n API (tested against a fake n8n).
+
+## Run it yourself
+```powershell
+backend\.venv\Scripts\python -m pytest                 # 194 tests
+backend\.venv\Scripts\python -m pytest --cov           # + coverage
+cd frontend; npm test; npm run build; cd ..            # frontend
+.\scripts\run-e2e.ps1                                   # end-to-end (DB must run; stops nothing of yours)
+```

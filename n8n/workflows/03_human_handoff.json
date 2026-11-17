@@ -1,0 +1,469 @@
+{
+  "id": "WaAgentHandoff01",
+  "name": "WA 3 - Human Handoff",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "85eeeffb-7976-57ef-b374-28f7a7f355ec",
+      "name": "From Workflow 1",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "30836a30-9325-5ced-8add-ebac34fe702e",
+              "name": "notify_channel",
+              "value": "log",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "d2fc7c6f-7ab8-53aa-b282-4292fdb66631",
+      "name": "Settings",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        220,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "5a62defb-8785-50ca-9099-43beef7be88b",
+              "leftValue": "={{ $json.action }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              },
+              "rightValue": "handoff"
+            },
+            {
+              "id": "7595370b-2c02-5c91-9b81-83b1e2f9eeac",
+              "leftValue": "={{ $json.handoff_request_id }}",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              },
+              "rightValue": ""
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "ce62fa2f-68d1-5e3c-8b85-deaac3faeead",
+      "name": "New handoff?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        440,
+        0
+      ],
+      "notes": "true: new handoff | false: customer wrote while a human handles the chat",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://127.0.0.1:8000/api/v1/internal/handoffs/{{ $json.handoff_request_id }}/assign",
+        "options": {
+          "timeout": 30000
+        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth"
+      },
+      "id": "c6553c16-3843-5324-926b-c72bc2b84e59",
+      "name": "Assign agent (backend)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        680,
+        -100
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "WaAgentBackendK1",
+          "name": "WA Agent Backend (internal key)"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "notes": "AI already paused. Least-busy sales agent",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "8e65cab1-6c47-5390-b47b-7666e10746a7",
+              "leftValue": "={{ $json.skip_reason }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              },
+              "rightValue": "human_mode"
+            },
+            {
+              "id": "9c0e16ab-3698-54d4-9e96-145fc3f71f58",
+              "leftValue": "={{ $json.conversation_id }}",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              },
+              "rightValue": ""
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "f9ab9c34-60ab-5323-bced-941b0ebc2f76",
+      "name": "Customer wrote during handoff?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        680,
+        100
+      ],
+      "notes": "Guard: anything else (empty/unknown input) ends quietly",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=http://127.0.0.1:8000/api/v1/internal/conversations/{{ $json.conversation_id }}/assignee",
+        "options": {
+          "timeout": 30000
+        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth"
+      },
+      "id": "53f1a823-c50d-5765-99ad-1786ad98e131",
+      "name": "Get assigned agent (backend)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        900,
+        160
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "WaAgentBackendK1",
+          "name": "WA Agent Backend (internal key)"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 30
+            }
+          ]
+        }
+      },
+      "id": "6c8b7800-705f-5216-ad6b-96c5aaf10049",
+      "name": "Every 30 minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        400
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "52708353-22fe-5c37-97d8-1dc79d72a98d",
+      "name": "Run now (manual test)",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:8000/api/v1/internal/handoffs/auto-resume",
+        "options": {
+          "timeout": 30000
+        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth"
+      },
+      "id": "1fd99419-2e2b-57dd-98da-92fa51aed1c9",
+      "name": "Resume AI when safe (backend)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        260,
+        500
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "WaAgentBackendK1",
+          "name": "WA Agent Backend (internal key)"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "notes": "Only idle conversations with no human reply return to the AI",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "e652690d-9366-5d10-aacf-dc9c6fe73807",
+              "leftValue": "={{ $('Settings').first().json.notify_channel }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              },
+              "rightValue": "gmail"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "eb7fb554-57e0-5b25-a90a-cbbd509f2a10",
+      "name": "Use Gmail?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        940,
+        0
+      ],
+      "notes": "Set notify_channel = gmail in 'Settings' after connecting Gmail",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.to }}",
+        "subject": "={{ $json.subject }}",
+        "emailType": "text",
+        "message": "={{ $json.body }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "947ca401-8008-5efc-8b4f-134c5640e34d",
+      "name": "Send Gmail",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1200,
+        -100
+      ],
+      "notes": "Needs a Gmail OAuth2 credential (see docs/N8N_SETUP.md)",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:8000/api/v1/internal/notifications/log",
+        "options": {
+          "timeout": 30000
+        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ channel: 'log', to: $json.to, subject: $json.subject, body: $json.body, related: { handoff_id: $json.handoff_id } }) }}"
+      },
+      "id": "ba61071f-2b9b-52f6-a58c-353eb4fe2484",
+      "name": "Log notification (backend)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1200,
+        100
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "WaAgentBackendK1",
+          "name": "WA Agent Backend (internal key)"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    }
+  ],
+  "connections": {
+    "From Workflow 1": {
+      "main": [
+        [
+          {
+            "node": "Settings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Settings": {
+      "main": [
+        [
+          {
+            "node": "New handoff?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "New handoff?": {
+      "main": [
+        [
+          {
+            "node": "Assign agent (backend)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Customer wrote during handoff?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Customer wrote during handoff?": {
+      "main": [
+        [
+          {
+            "node": "Get assigned agent (backend)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Assign agent (backend)": {
+      "main": [
+        [
+          {
+            "node": "Use Gmail?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Use Gmail?": {
+      "main": [
+        [
+          {
+            "node": "Send Gmail",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log notification (backend)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get assigned agent (backend)": {
+      "main": [
+        [
+          {
+            "node": "Use Gmail?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Every 30 minutes": {
+      "main": [
+        [
+          {
+            "node": "Resume AI when safe (backend)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run now (manual test)": {
+      "main": [
+        [
+          {
+            "node": "Resume AI when safe (backend)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "all",
+    "saveDataErrorExecution": "all",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "timezone": "Asia/Karachi",
+    "errorWorkflow": "WaAgentErrors001"
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": []
+}

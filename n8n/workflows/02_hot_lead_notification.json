@@ -1,0 +1,335 @@
+{
+  "id": "WaAgentLeadNoti1",
+  "name": "WA 2 - Hot Lead Notification",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "85eeeffb-7976-57ef-b374-28f7a7f355ec",
+      "name": "From Workflow 1",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "30836a30-9325-5ced-8add-ebac34fe702e",
+              "name": "notify_channel",
+              "value": "log",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "d2fc7c6f-7ab8-53aa-b282-4292fdb66631",
+      "name": "Settings",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        220,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=http://127.0.0.1:8000/api/v1/internal/leads/{{ $json.lead.id }}/notification",
+        "options": {
+          "timeout": 30000
+        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth"
+      },
+      "id": "896169eb-c542-5654-bc2b-c66395312d7a",
+      "name": "Lead summary (backend)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        440,
+        0
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "WaAgentBackendK1",
+          "name": "WA Agent Backend (internal key)"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "882ab323-b37a-5eaf-995a-a7f74e30aa99",
+              "leftValue": "={{ $json.already_notified }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              },
+              "rightValue": ""
+            },
+            {
+              "id": "8383074f-b221-5cf7-b2ed-a6aaa5e3ad35",
+              "leftValue": "={{ $json.temperature }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              },
+              "rightValue": "hot"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "42a0a527-5b10-5f76-abdd-ff4c2eb44f35",
+      "name": "Still hot & not notified?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        660,
+        0
+      ],
+      "notes": "Never emails the same lead twice",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "e652690d-9366-5d10-aacf-dc9c6fe73807",
+              "leftValue": "={{ $('Settings').first().json.notify_channel }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              },
+              "rightValue": "gmail"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "eb7fb554-57e0-5b25-a90a-cbbd509f2a10",
+      "name": "Use Gmail?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        900,
+        0
+      ],
+      "notes": "Set notify_channel = gmail in 'Settings' after connecting Gmail",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.to }}",
+        "subject": "={{ $json.subject }}",
+        "emailType": "text",
+        "message": "={{ $json.body }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "947ca401-8008-5efc-8b4f-134c5640e34d",
+      "name": "Send Gmail",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1160,
+        -100
+      ],
+      "notes": "Needs a Gmail OAuth2 credential (see docs/N8N_SETUP.md)",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:8000/api/v1/internal/notifications/log",
+        "options": {
+          "timeout": 30000
+        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ channel: 'log', to: $json.to, subject: $json.subject, body: $json.body, related: { lead_id: $json.lead_id } }) }}"
+      },
+      "id": "ba61071f-2b9b-52f6-a58c-353eb4fe2484",
+      "name": "Log notification (backend)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1160,
+        100
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "WaAgentBackendK1",
+          "name": "WA Agent Backend (internal key)"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://127.0.0.1:8000/api/v1/internal/leads/{{ $('Lead summary (backend)').first().json.lead_id }}/notified",
+        "options": {
+          "timeout": 30000
+        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ channel: $('Settings').first().json.notify_channel, to: $('Lead summary (backend)').first().json.to }) }}"
+      },
+      "id": "1656dd1e-51c6-5a23-8962-fd978e586164",
+      "name": "Mark lead notified (backend)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1400,
+        0
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "WaAgentBackendK1",
+          "name": "WA Agent Backend (internal key)"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    }
+  ],
+  "connections": {
+    "From Workflow 1": {
+      "main": [
+        [
+          {
+            "node": "Settings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Settings": {
+      "main": [
+        [
+          {
+            "node": "Lead summary (backend)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lead summary (backend)": {
+      "main": [
+        [
+          {
+            "node": "Still hot & not notified?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Still hot & not notified?": {
+      "main": [
+        [
+          {
+            "node": "Use Gmail?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Use Gmail?": {
+      "main": [
+        [
+          {
+            "node": "Send Gmail",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log notification (backend)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Gmail": {
+      "main": [
+        [
+          {
+            "node": "Mark lead notified (backend)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log notification (backend)": {
+      "main": [
+        [
+          {
+            "node": "Mark lead notified (backend)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "all",
+    "saveDataErrorExecution": "all",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "timezone": "Asia/Karachi",
+    "errorWorkflow": "WaAgentErrors001"
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": []
+}

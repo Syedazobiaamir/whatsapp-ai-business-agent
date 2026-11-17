@@ -1,0 +1,123 @@
+# Full stack:   docker compose --profile full up -d --build  -> dashboard http://127.0.0.1:8080, n8n http://127.0.0.1:5690
+# Dev (DB only): docker compose up -d   (only postgres has no profile) -> then run backend/frontend/n8n locally (scripts/)
+# Production:    docker compose -f docker-compose.yml -f docker-compose.prod.yml --profile full up -d --build   (see docs/DEPLOYMENT.md)
+# All secrets come from .env (never committed).
+name: wa-agent
+
+x-n8n-env: &n8n-env
+  DB_TYPE: postgresdb
+  DB_POSTGRESDB_HOST: postgres
+  DB_POSTGRESDB_PORT: "5432"
+  DB_POSTGRESDB_DATABASE: n8n                 # n8n gets its own database on the same server
+  DB_POSTGRESDB_USER: ${POSTGRES_USER}
+  DB_POSTGRESDB_PASSWORD: ${POSTGRES_PASSWORD}
+  N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY}   # encrypts stored credentials - keep it safe
+  GENERIC_TIMEZONE: Asia/Karachi
+  N8N_DIAGNOSTICS_ENABLED: "false"
+  N8N_VERSION_NOTIFICATIONS_ENABLED: "false"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: wa-agent-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"   # only reachable from this computer
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # One-off: create n8n's database if it does not exist yet (works on existing volumes too).
+  db-init:
+    image: postgres:16-alpine
+    depends_on:
+      postgres: { condition: service_healthy }
+    environment:
+      PGHOST: postgres
+      PGUSER: ${POSTGRES_USER}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      PGDATABASE: ${POSTGRES_DB}
+    entrypoint: ["sh", "-c", "psql -tAc \"SELECT 1 FROM pg_database WHERE datname='n8n'\" | grep -q 1 || psql -c 'CREATE DATABASE n8n'"]
+    restart: "no"
+    profiles: ["full"]
+
+  backend:
+    build: { context: ., dockerfile: backend/Dockerfile }
+    image: wa-agent-backend:latest
+    container_name: wa-agent-backend
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      POSTGRES_HOST: postgres                 # inside Docker, services find each other by name
+      POSTGRES_PORT: "5432"
+      N8N_BASE_URL: http://n8n:5678
+      FRONTEND_URL: ${DASHBOARD_URL:-http://127.0.0.1:8080}
+      WA_APP_SECRET: ${WA_APP_SECRET:-}
+    depends_on:
+      postgres: { condition: service_healthy }
+    # No "ports:": the API is only reachable through nginx (/api) and by n8n on the internal network.
+    profiles: ["full"]
+
+  frontend:
+    build: { context: ., dockerfile: frontend/Dockerfile }
+    image: wa-agent-frontend:latest
+    container_name: wa-agent-frontend
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${DASHBOARD_PORT:-8080}:80"
+    depends_on:
+      backend: { condition: service_healthy }
+    profiles: ["full"]
+
+  # One-off: import credential + workflows (only when the JSON files changed).
+  n8n-import:
+    image: ${N8N_IMAGE:-n8nio/n8n:2.46.4}
+    environment:
+      <<: *n8n-env
+      BACKEND_URL: http://backend:8000/api/v1
+      BACKEND_INTERNAL_API_KEY: ${BACKEND_INTERNAL_API_KEY}
+      FORCE_IMPORT: ${N8N_FORCE_IMPORT:-false}
+    entrypoint: ["sh", "/import.sh"]
+    volumes:
+      - ./n8n/workflows:/workflows:ro
+      - ./docker/n8n-import.sh:/import.sh:ro
+      - n8ndata:/home/node/.n8n
+    depends_on:
+      db-init: { condition: service_completed_successfully }
+    restart: "no"
+    profiles: ["full"]
+
+  n8n:
+    image: ${N8N_IMAGE:-n8nio/n8n:2.46.4}
+    container_name: wa-agent-n8n
+    restart: unless-stopped
+    environment:
+      <<: *n8n-env
+      WEBHOOK_URL: ${N8N_WEBHOOK_URL:-http://127.0.0.1:5690/}   # public URL Meta calls (https in production)
+      N8N_SECURE_COOKIE: ${N8N_SECURE_COOKIE:-false}            # true behind HTTPS
+    ports:
+      - "127.0.0.1:${N8N_PORT:-5690}:5678"
+    volumes:
+      - n8ndata:/home/node/.n8n
+    depends_on:
+      n8n-import: { condition: service_completed_successfully }
+      backend: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:5678/healthz >/dev/null || exit 1"]
+      interval: 15s
+      timeout: 5s
+      start_period: 40s
+      retries: 5
+    profiles: ["full"]
+
+volumes:
+  pgdata:
+  n8ndata:

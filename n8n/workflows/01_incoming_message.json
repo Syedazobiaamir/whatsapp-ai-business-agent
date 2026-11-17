@@ -1,0 +1,660 @@
+{
+  "id": "WaAgentIncoming1",
+  "name": "WA 1 - Incoming WhatsApp Message",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "whatsapp",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "59027dfa-2cf4-5034-a017-ffd9e73599e8",
+      "name": "Meta verification (GET)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "f78f5e91-f433-5899-83b3-0741feb48d7c"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "http://127.0.0.1:8000/api/v1/webhooks/whatsapp",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        },
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "hub.mode",
+              "value": "={{ $json.query['hub.mode'] }}"
+            },
+            {
+              "name": "hub.verify_token",
+              "value": "={{ $json.query['hub.verify_token'] }}"
+            },
+            {
+              "name": "hub.challenge",
+              "value": "={{ $json.query['hub.challenge'] }}"
+            }
+          ]
+        }
+      },
+      "id": "9ff7fb4a-e261-535b-9fbf-3238dc093813",
+      "name": "Verify token (backend)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        240,
+        0
+      ],
+      "notes": "Backend checks the verify token",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.data ?? JSON.stringify($json.body) }}",
+        "options": {
+          "responseCode": "={{ $json.statusCode }}"
+        }
+      },
+      "id": "39b628e8-4eec-5a9d-8195-85843590d59e",
+      "name": "Respond challenge",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        480,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "whatsapp",
+        "responseMode": "responseNode",
+        "options": {
+          "rawBody": true
+        }
+      },
+      "id": "c6abea2c-855d-5c42-a863-673650c69d42",
+      "name": "WhatsApp message (POST)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        300
+      ],
+      "webhookId": "3fe3dfc4-6efc-515c-b1ef-e743c9e4756b",
+      "notes": "rawBody keeps Meta's exact bytes for the signature check",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:8000/api/v1/webhooks/whatsapp",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        },
+        "sendBody": true,
+        "contentType": "binaryData",
+        "inputDataFieldName": "data",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Hub-Signature-256",
+              "value": "={{ $json.headers['x-hub-signature-256'] || '' }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        }
+      },
+      "id": "33e797bf-a0c1-5280-a38a-055eb293ed44",
+      "name": "Validate, identify & save (backend)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        240,
+        300
+      ],
+      "notes": "Signature check, payload validation, dedupe, customer + message saved",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json.body }}",
+        "options": {
+          "responseCode": "={{ $json.statusCode }}"
+        }
+      },
+      "id": "6becae91-52a4-5f2c-811f-ec32c72794d1",
+      "name": "Respond to Meta",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        480,
+        300
+      ],
+      "notes": "Meta gets its answer fast; AI work continues after",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "a6deade8-191b-5d4b-a9a9-d6434ef6c6df",
+              "leftValue": "={{ $json.statusCode }}",
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              },
+              "rightValue": 200
+            },
+            {
+              "id": "8ba3dd87-7aa6-5b63-9119-57c90ff2d7e7",
+              "leftValue": "={{ ($json.body.new_message_ids || []).length }}",
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              },
+              "rightValue": 0
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "cd656b23-8637-5b48-be95-c03e42f91bf4",
+      "name": "New messages?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        720,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6ef9046e-be71-5666-89b0-806cb6d10a56",
+              "name": "message_ids",
+              "value": "={{ $json.body.new_message_ids }}",
+              "type": "array"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "id": "e128c545-bddb-59b3-bec8-6d27607a25bb",
+      "name": "Message ids",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        960,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "message_ids",
+        "options": {}
+      },
+      "id": "1e1e1f8b-b3f1-53ed-a9e5-be2025faa219",
+      "name": "One item per message",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        1180,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:8000/api/v1/agent/process",
+        "options": {
+          "timeout": 90000
+        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ message_id: $json.message_ids, send: false }) }}"
+      },
+      "id": "65440013-1252-5db5-856b-418fff095bb1",
+      "name": "AI agent (backend)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1400,
+        280
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "WaAgentBackendK1",
+          "name": "WA Agent Backend (internal key)"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "notes": "Support/Sales/Qualification modules. Idempotent: never answers twice",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f694558d-63d8-55db-9d42-4e73000e5245",
+              "leftValue": "={{ $json.reply_message_id }}",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              },
+              "rightValue": ""
+            },
+            {
+              "id": "74d71d99-a87d-5d68-921a-f9942de1ddd9",
+              "leftValue": "={{ $json.reply_send_status }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              },
+              "rightValue": "pending"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "2b126f00-15b7-5ff0-848e-ac42a88a0ed8",
+      "name": "Reply to send?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1640,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://127.0.0.1:8000/api/v1/internal/messages/{{ $json.reply_message_id }}/send",
+        "options": {
+          "timeout": 30000
+        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth"
+      },
+      "id": "3333414b-fba4-5ed0-a03c-d180966b5cc7",
+      "name": "Send WhatsApp reply (backend)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1880,
+        100
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "WaAgentBackendK1",
+          "name": "WA Agent Backend (internal key)"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "notes": "WhatsApp Cloud API via backend: safe retries, mock mode",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "83fb1e75-5dc6-55f4-afda-784af49262d9",
+              "leftValue": "={{ $json.notify_sales }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              },
+              "rightValue": ""
+            },
+            {
+              "id": "be99712a-017f-5297-98df-344dbc781948",
+              "leftValue": "={{ $json.already_processed }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              },
+              "rightValue": ""
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "bd865706-0ede-5924-8fb7-7daa42cb6b29",
+      "name": "Hot lead? (new)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1640,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "WaAgentLeadNoti1",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": false
+        }
+      },
+      "id": "66306bd9-e15d-59ee-9a49-c6c4b8c55abb",
+      "name": "Notify sales (Workflow 2)",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1880,
+        320
+      ],
+      "notes": "Runs WA 2 - Hot Lead Notification",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "ac672bc7-de34-5bb2-8c17-e1644a615ad7",
+              "leftValue": "={{ $json.action === 'handoff' || $json.skip_reason === 'human_mode' }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              },
+              "rightValue": ""
+            },
+            {
+              "id": "be99712a-017f-5297-98df-344dbc781948",
+              "leftValue": "={{ $json.already_processed }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              },
+              "rightValue": ""
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "d7856d42-1ddf-5f15-8e75-34beef550558",
+      "name": "Needs a human?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1640,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "WaAgentHandoff01",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": false
+        }
+      },
+      "id": "f7a1276e-6e3f-5104-8959-8b153f325df3",
+      "name": "Human handoff (Workflow 3)",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1880,
+        520
+      ],
+      "notes": "Runs WA 3 - Human Handoff",
+      "notesInFlow": true
+    }
+  ],
+  "connections": {
+    "Meta verification (GET)": {
+      "main": [
+        [
+          {
+            "node": "Verify token (backend)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verify token (backend)": {
+      "main": [
+        [
+          {
+            "node": "Respond challenge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WhatsApp message (POST)": {
+      "main": [
+        [
+          {
+            "node": "Validate, identify & save (backend)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate, identify & save (backend)": {
+      "main": [
+        [
+          {
+            "node": "Respond to Meta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Meta": {
+      "main": [
+        [
+          {
+            "node": "New messages?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "New messages?": {
+      "main": [
+        [
+          {
+            "node": "Message ids",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message ids": {
+      "main": [
+        [
+          {
+            "node": "One item per message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "One item per message": {
+      "main": [
+        [
+          {
+            "node": "AI agent (backend)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI agent (backend)": {
+      "main": [
+        [
+          {
+            "node": "Reply to send?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Hot lead? (new)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Needs a human?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reply to send?": {
+      "main": [
+        [
+          {
+            "node": "Send WhatsApp reply (backend)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hot lead? (new)": {
+      "main": [
+        [
+          {
+            "node": "Notify sales (Workflow 2)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Needs a human?": {
+      "main": [
+        [
+          {
+            "node": "Human handoff (Workflow 3)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "all",
+    "saveDataErrorExecution": "all",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "timezone": "Asia/Karachi",
+    "errorWorkflow": "WaAgentErrors001"
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": []
+}

@@ -1,0 +1,35 @@
+{
+  "object": "whatsapp_business_account",
+  "entry": [
+    {
+      "id": "102290129340398",
+      "changes": [
+        {
+          "field": "messages",
+          "value": {
+            "messaging_product": "whatsapp",
+            "metadata": {
+              "display_phone_number": "15550783881",
+              "phone_number_id": "106540352242922"
+            },
+            "contacts": [
+              {
+                "profile": { "name": "Ali Khan" },
+                "wa_id": "923001234567"
+              }
+            ],
+            "messages": [
+              {
+                "from": "923001234567",
+                "id": "wamid.TEST.0001",
+                "timestamp": "1763280000",
+                "type": "text",
+                "text": { "body": "Hi, how much does an online store cost?" }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

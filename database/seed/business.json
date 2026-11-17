@@ -1,0 +1,145 @@
+{
+  "settings": {
+    "business_info": {
+      "name": "NovaByte Digital Studio",
+      "description": "A digital agency that builds websites, online stores, mobile apps and business automations for small and medium businesses.",
+      "website": "https://novabyte.example.com",
+      "contact_email": "hello@novabyte.example.com",
+      "timezone": "Asia/Karachi",
+      "business_hours": "Monday-Friday, 10:00-19:00",
+      "languages": ["English", "Urdu"]
+    },
+    "ai_config": {
+      "model": "gemini-3.8-flash",
+      "temperature": 0.3,
+      "tone": "friendly, professional, concise",
+      "max_history_messages": 12,
+      "faq_confidence_threshold": 0.6,
+      "handoff_keywords": ["human", "agent", "representative", "call me", "talk to someone", "manager"],
+      "never_invent_prices": true
+    },
+    "lead_rules": {
+      "hot_min_score": 70,
+      "warm_min_score": 40,
+      "qualifying_questions": ["need", "budget", "timeline", "decision_maker"]
+    },
+    "follow_up_rules": {
+      "enabled": true,
+      "first_follow_up_after_hours": 24,
+      "second_follow_up_after_hours": 72,
+      "max_follow_ups": 2,
+      "require_human_approval": true,
+      "template_name": "hello_world",
+      "template_uses_customer_name": false
+    },
+    "handoff_rules": {
+      "auto_resume_after_hours": 24
+    }
+  },
+  "services": [
+    {
+      "name": "Business Website",
+      "description": "Responsive 5-10 page website with contact forms, SEO basics and 1 month of support.",
+      "price_from": 400, "price_to": 1200, "currency": "USD"
+    },
+    {
+      "name": "E-commerce Store",
+      "description": "Online store (Shopify or WooCommerce) with payment gateway, product setup and order emails.",
+      "price_from": 900, "price_to": 3000, "currency": "USD"
+    },
+    {
+      "name": "Mobile App",
+      "description": "Cross-platform Android and iOS app built with React Native or Flutter.",
+      "price_from": 2500, "price_to": 10000, "currency": "USD"
+    },
+    {
+      "name": "WhatsApp Automation",
+      "description": "WhatsApp Business API chatbot with AI replies, lead capture and CRM integration.",
+      "price_from": 600, "price_to": 2500, "currency": "USD"
+    },
+    {
+      "name": "SEO & Digital Marketing",
+      "description": "Monthly SEO, Google Business profile, social media ads management and reporting.",
+      "price_from": 250, "price_to": 1000, "currency": "USD"
+    },
+    {
+      "name": "Website Maintenance Plan",
+      "description": "Monthly updates, backups, security monitoring and small content changes.",
+      "price_from": 50, "price_to": 200, "currency": "USD"
+    }
+  ],
+  "faqs": [
+    {
+      "category": "general",
+      "question": "What services do you offer?",
+      "answer": "We build business websites, e-commerce stores, mobile apps, WhatsApp automations, and offer SEO/digital marketing and website maintenance plans.",
+      "keywords": "services, offer, what do you do, help"
+    },
+    {
+      "category": "general",
+      "question": "What are your business hours?",
+      "answer": "We are available Monday to Friday, 10:00 to 19:00 (Pakistan time). Messages sent outside these hours are answered by our AI assistant, and a team member follows up on the next working day.",
+      "keywords": "hours, timing, open, available, weekend"
+    },
+    {
+      "category": "pricing",
+      "question": "How much does a website cost?",
+      "answer": "A business website usually costs between 400 and 1,200 USD depending on the number of pages and features. We give an exact quote after understanding your requirements.",
+      "keywords": "price, cost, website price, quote, charges, rate"
+    },
+    {
+      "category": "pricing",
+      "question": "How much does an online store cost?",
+      "answer": "E-commerce stores usually cost between 900 and 3,000 USD depending on the platform, number of products and payment integrations.",
+      "keywords": "ecommerce, shop, store, shopify, woocommerce, price"
+    },
+    {
+      "category": "pricing",
+      "question": "Do you require an advance payment?",
+      "answer": "Yes. We usually take 50% in advance to start the project and 50% on delivery. Larger projects can be split into milestones.",
+      "keywords": "advance, payment, deposit, installments, milestones"
+    },
+    {
+      "category": "process",
+      "question": "How long does it take to build a website?",
+      "answer": "A standard business website takes 2 to 4 weeks. E-commerce stores take 3 to 6 weeks, and mobile apps usually 8 to 16 weeks.",
+      "keywords": "time, duration, how long, timeline, delivery, deadline"
+    },
+    {
+      "category": "process",
+      "question": "What is your project process?",
+      "answer": "1) Free consultation call, 2) proposal and quote, 3) design approval, 4) development, 5) testing and your feedback, 6) launch and support.",
+      "keywords": "process, steps, how do you work, workflow"
+    },
+    {
+      "category": "support",
+      "question": "Do you provide support after launch?",
+      "answer": "Yes. Every project includes 1 month of free support. After that you can choose a maintenance plan starting from 50 USD per month.",
+      "keywords": "support, maintenance, after delivery, bugs, updates"
+    },
+    {
+      "category": "general",
+      "question": "Can I see examples of your work?",
+      "answer": "Yes! Our portfolio is on our website. Tell us your industry and we will share the most relevant examples.",
+      "keywords": "portfolio, examples, previous work, samples, case study"
+    },
+    {
+      "category": "general",
+      "question": "Do you work with international clients?",
+      "answer": "Yes, we work with clients worldwide. Meetings are held on Google Meet or Zoom and we accept international payments.",
+      "keywords": "international, abroad, outside pakistan, remote, overseas"
+    },
+    {
+      "category": "automation",
+      "question": "What can a WhatsApp automation do for my business?",
+      "answer": "It can answer customer questions 24/7, capture leads, qualify them, send order updates, and hand complex chats to your team. Pricing starts from 600 USD.",
+      "keywords": "whatsapp, chatbot, automation, bot, ai"
+    },
+    {
+      "category": "contact",
+      "question": "How can I talk to a person?",
+      "answer": "Just type 'talk to a human' and a team member will join this chat during business hours.",
+      "keywords": "human, person, agent, call, representative, speak"
+    }
+  ]
+}

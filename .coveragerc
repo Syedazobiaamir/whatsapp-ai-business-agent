@@ -1,0 +1,16 @@
+# Coverage settings for:  backend\.venv\Scripts\python -m pytest --cov=backend/app
+[run]
+# SQLAlchemy async runs DB code in greenlets; without this, every line after an
+# "await session..." is wrongly reported as never executed.
+concurrency = thread,greenlet
+source = backend/app
+omit =
+    backend/app/seed.py
+
+[report]
+skip_covered = True
+show_missing = True
+exclude_lines =
+    pragma: no cover
+    if __name__ == .__main__.:
+    raise AssertionError\("unreachable"\)

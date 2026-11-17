@@ -1,0 +1,247 @@
+{
+  "id": "WaAgentFollowUp1",
+  "name": "WA 4 - Follow-up Automation",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours"
+            }
+          ]
+        }
+      },
+      "id": "731ff370-4652-5638-b41f-180bdfd01683",
+      "name": "Every hour",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "52708353-22fe-5c37-97d8-1dc79d72a98d",
+      "name": "Run now (manual test)",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:8000/api/v1/internal/follow-ups/plan",
+        "options": {
+          "timeout": 30000
+        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth"
+      },
+      "id": "ea1aca08-a070-5392-b98a-12d83c3a4c9b",
+      "name": "Plan follow-ups (backend)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        260,
+        100
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "WaAgentBackendK1",
+          "name": "WA Agent Backend (internal key)"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "notes": "Eligible leads + consent + 24h/template rules",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "http://127.0.0.1:8000/api/v1/internal/follow-ups/due",
+        "options": {
+          "timeout": 30000
+        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth"
+      },
+      "id": "2693e5a2-1f3f-5f30-b0f3-67a6caddaa3e",
+      "name": "Get approved & due (backend)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        500,
+        100
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "WaAgentBackendK1",
+          "name": "WA Agent Backend (internal key)"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "notes": "Only human-approved tasks",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "67283de5-bb3d-580c-b918-74bbc373faa6",
+              "name": "task_ids",
+              "value": "={{ $json.task_ids }}",
+              "type": "array"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "id": "49ceeedc-b5a0-55ee-b633-1279fd17b0da",
+      "name": "Task ids",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        740,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "task_ids",
+        "options": {}
+      },
+      "id": "4af5eb28-ffd6-5de0-b073-917eb19a5d7d",
+      "name": "One item per task",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        960,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://127.0.0.1:8000/api/v1/internal/follow-ups/{{ $json.task_ids }}/send",
+        "options": {
+          "timeout": 30000
+        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth"
+      },
+      "id": "e118d435-bea5-59ae-a88e-4a1d48ec3c70",
+      "name": "Send follow-up (backend)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1180,
+        100
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "WaAgentBackendK1",
+          "name": "WA Agent Backend (internal key)"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "notes": "Re-checks consent & rules, sends template, records result",
+      "notesInFlow": true
+    }
+  ],
+  "connections": {
+    "Every hour": {
+      "main": [
+        [
+          {
+            "node": "Plan follow-ups (backend)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run now (manual test)": {
+      "main": [
+        [
+          {
+            "node": "Plan follow-ups (backend)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Plan follow-ups (backend)": {
+      "main": [
+        [
+          {
+            "node": "Get approved & due (backend)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get approved & due (backend)": {
+      "main": [
+        [
+          {
+            "node": "Task ids",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Task ids": {
+      "main": [
+        [
+          {
+            "node": "One item per task",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "One item per task": {
+      "main": [
+        [
+          {
+            "node": "Send follow-up (backend)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "all",
+    "saveDataErrorExecution": "all",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "timezone": "Asia/Karachi",
+    "errorWorkflow": "WaAgentErrors001"
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": []
+}

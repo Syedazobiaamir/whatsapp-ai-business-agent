@@ -1,0 +1,12 @@
+# Runtime dependencies (more are added in later stages)
+sqlalchemy[asyncio]>=2.0.36,<2.1    # ORM: Python classes <-> database tables
+asyncpg>=0.30,<1.0                  # fast async PostgreSQL driver
+alembic>=1.14,<2.0                  # database migrations (versioned schema changes)
+pydantic-settings>=2.6,<3.0         # reads and validates .env settings
+bcrypt>=4.2,<6.0                    # password hashing for dashboard users
+fastapi>=0.115,<1.0                 # web framework: REST API + automatic /docs
+uvicorn[standard]>=0.32,<1.0         # ASGI server that runs FastAPI
+pyjwt>=2.10,<3.0                     # JSON Web Tokens for dashboard login
+python-multipart>=0.0.18             # form login (used by the /docs Authorize button)
+email-validator>=2.2,<3.0            # validates email fields (Pydantic EmailStr)
+google-genai>=1.50,<3.0               # official Gemini SDK (async + JSON schema output)

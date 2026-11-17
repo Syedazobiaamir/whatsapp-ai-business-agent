@@ -1,0 +1,605 @@
+{
+  "id": "WaAgentErrors001",
+  "name": "WA 5 - Error Handler & Recovery",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "52708353-22fe-5c37-97d8-1dc79d72a98d",
+      "name": "Run now (manual test)",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        480
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "67303dfc-9304-546b-8996-d311d5d14ddf",
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:8000/api/v1/internal/automation-errors",
+        "options": {
+          "timeout": 30000
+        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ workflow_id: $json.workflow.id, workflow_name: $json.workflow.name, execution_id: $json.execution.id, node_name: $json.execution.lastNodeExecuted, error_message: ($json.execution.error && $json.execution.error.message) || 'Unknown error', http_code: parseInt(($json.execution.error && $json.execution.error.httpCode) || '') || null, mode: $json.execution.mode }) }}"
+      },
+      "id": "f9359ab2-648d-5171-b518-cd9946ab7bb9",
+      "name": "Report error (backend)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        240,
+        0
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "WaAgentBackendK1",
+          "name": "WA Agent Backend (internal key)"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "notes": "Backend classifies: retry (safe) / alert (needs fix) / approval (risky)",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7c2d35e3-4044-5792-9dac-f74ec031233d",
+              "leftValue": "={{ $json.alert }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              },
+              "rightValue": ""
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "35735f5b-d8ae-5887-a50a-bc6ca25bd2f4",
+      "name": "Alert now?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        480,
+        0
+      ],
+      "notes": "Grouped repeats are not alerted twice",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8e151868-2b3e-5f60-a25b-1fb4060cd2c7",
+              "name": "error_id",
+              "value": "={{ $json.error_id }}",
+              "type": "string"
+            },
+            {
+              "id": "8f651449-8478-5be9-a0e7-80589411d38b",
+              "name": "to",
+              "value": "={{ $json.to }}",
+              "type": "string"
+            },
+            {
+              "id": "0fcbb426-b0cf-5995-8531-87bc0095cbb7",
+              "name": "subject",
+              "value": "={{ $json.subject }}",
+              "type": "string"
+            },
+            {
+              "id": "e77e7e7d-fa61-57aa-b079-099f73b46fa0",
+              "name": "body",
+              "value": "={{ $json.body }}",
+              "type": "string"
+            },
+            {
+              "id": "0497bc19-2f3e-5270-92bb-c0d9b5050b14",
+              "name": "notify_channel",
+              "value": "log",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "id": "60f61826-9881-58c5-9aef-67d28b53dbdc",
+      "name": "Alert (from trigger)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        700,
+        -60
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 5
+            }
+          ]
+        }
+      },
+      "id": "a1cef3e5-3124-58af-b471-d2f50ee9ad3b",
+      "name": "Every 5 minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:8000/api/v1/internal/recovery/run",
+        "options": {
+          "timeout": 30000
+        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth"
+      },
+      "id": "7445b37a-84a8-5f3c-bb82-fee75b437631",
+      "name": "Run safe retries (backend)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        240,
+        380
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "WaAgentBackendK1",
+          "name": "WA Agent Backend (internal key)"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "notes": "Only SAFE errors whose retry time has come",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "http://127.0.0.1:8000/api/v1/internal/recovery/alerts",
+        "options": {
+          "timeout": 30000
+        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth"
+      },
+      "id": "867361db-d3f4-56f5-aa1c-a3ff71235ca1",
+      "name": "Pending alerts (backend)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        480,
+        380
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "WaAgentBackendK1",
+          "name": "WA Agent Backend (internal key)"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "notes": "e.g. retries exhausted, failures recorded by the backend itself",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "df4d4a5c-d83b-5af5-8d76-35f13b6f581c",
+              "name": "alert_ids",
+              "value": "={{ $json.alerts }}",
+              "type": "array"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "id": "77be4e77-81c4-5e51-9c6a-60b5c9ceaa40",
+      "name": "Alert list",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        700,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "alert_ids",
+        "options": {}
+      },
+      "id": "2edd77ce-92bd-5d0e-a618-6f9f6c0f7710",
+      "name": "One item per alert",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        900,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3c73b319-f57b-564f-a602-a8adfe77cc38",
+              "name": "error_id",
+              "value": "={{ ($json.alert_ids || $json).error_id }}",
+              "type": "string"
+            },
+            {
+              "id": "c516fe84-388b-5e04-8ef0-9c5866364340",
+              "name": "to",
+              "value": "={{ ($json.alert_ids || $json).to }}",
+              "type": "string"
+            },
+            {
+              "id": "68a70498-34c8-524e-a983-6cb87e72adc8",
+              "name": "subject",
+              "value": "={{ ($json.alert_ids || $json).subject }}",
+              "type": "string"
+            },
+            {
+              "id": "a926642a-63d1-5598-89f5-6dda77b40d92",
+              "name": "body",
+              "value": "={{ ($json.alert_ids || $json).body }}",
+              "type": "string"
+            },
+            {
+              "id": "29c538c4-7101-5881-99c6-904ba80c7ba1",
+              "name": "notify_channel",
+              "value": "log",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "id": "0f4c27e5-31e7-5a6a-b83d-eaa24ffea1df",
+      "name": "Alert (from schedule)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1100,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "5cddcd13-c3e1-5083-8bef-d719bacee2c1",
+              "leftValue": "={{ $json.notify_channel }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              },
+              "rightValue": "gmail"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "eb7fb554-57e0-5b25-a90a-cbbd509f2a10",
+      "name": "Use Gmail?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1340,
+        100
+      ],
+      "notes": "Set notify_channel = gmail in 'Settings' after connecting Gmail",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.to }}",
+        "subject": "={{ $json.subject }}",
+        "emailType": "text",
+        "message": "={{ $json.body }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "947ca401-8008-5efc-8b4f-134c5640e34d",
+      "name": "Send Gmail",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1600,
+        0
+      ],
+      "notes": "Needs a Gmail OAuth2 credential (see docs/N8N_SETUP.md)",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:8000/api/v1/internal/notifications/log",
+        "options": {
+          "timeout": 30000
+        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ channel: 'log', to: $json.to, subject: $json.subject, body: $json.body, related: { error_id: $json.error_id } }) }}"
+      },
+      "id": "ba61071f-2b9b-52f6-a58c-353eb4fe2484",
+      "name": "Log notification (backend)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1600,
+        200
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "WaAgentBackendK1",
+          "name": "WA Agent Backend (internal key)"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://127.0.0.1:8000/api/v1/internal/automation-errors/{{ $('Use Gmail?').item.json.error_id }}/alerted",
+        "options": {
+          "timeout": 30000
+        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth"
+      },
+      "id": "9b5874d2-9125-574f-acb8-d87c6f0b7408",
+      "name": "Mark alerted (backend)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1840,
+        100
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "WaAgentBackendK1",
+          "name": "WA Agent Backend (internal key)"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "notes": "So the same error group is never announced twice",
+      "notesInFlow": true
+    }
+  ],
+  "connections": {
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Report error (backend)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Report error (backend)": {
+      "main": [
+        [
+          {
+            "node": "Alert now?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Alert now?": {
+      "main": [
+        [
+          {
+            "node": "Alert (from trigger)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Every 5 minutes": {
+      "main": [
+        [
+          {
+            "node": "Run safe retries (backend)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run now (manual test)": {
+      "main": [
+        [
+          {
+            "node": "Run safe retries (backend)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run safe retries (backend)": {
+      "main": [
+        [
+          {
+            "node": "Pending alerts (backend)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pending alerts (backend)": {
+      "main": [
+        [
+          {
+            "node": "Alert list",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Alert list": {
+      "main": [
+        [
+          {
+            "node": "One item per alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "One item per alert": {
+      "main": [
+        [
+          {
+            "node": "Alert (from schedule)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Alert (from trigger)": {
+      "main": [
+        [
+          {
+            "node": "Use Gmail?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Use Gmail?": {
+      "main": [
+        [
+          {
+            "node": "Send Gmail",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log notification (backend)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Alert (from schedule)": {
+      "main": [
+        [
+          {
+            "node": "Use Gmail?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Gmail": {
+      "main": [
+        [
+          {
+            "node": "Mark alerted (backend)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log notification (backend)": {
+      "main": [
+        [
+          {
+            "node": "Mark alerted (backend)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "all",
+    "saveDataErrorExecution": "all",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "timezone": "Asia/Karachi"
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": []
+}

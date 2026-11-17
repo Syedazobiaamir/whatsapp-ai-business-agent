@@ -1,0 +1,70 @@
+{
+  "id": "WaAgentErrDrill1",
+  "name": "WA 9 - Error Drill (demo)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "error-drill",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "3c7968e3-f8c4-5ef5-ba23-bcbfe6f1ff28",
+      "name": "Start drill (POST)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "a21ce753-133d-558f-b55c-aac9dd4ff4f0"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "http://127.0.0.1:9/unreachable",
+        "options": {
+          "timeout": 3000
+        }
+      },
+      "id": "7eb41e03-cbfb-573d-9f8a-90569370e8b9",
+      "name": "Call a service that is down",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        260,
+        0
+      ],
+      "notes": "Port 9 is closed -> ECONNREFUSED -> WA 5 takes over",
+      "notesInFlow": true
+    }
+  ],
+  "connections": {
+    "Start drill (POST)": {
+      "main": [
+        [
+          {
+            "node": "Call a service that is down",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "all",
+    "saveDataErrorExecution": "all",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "timezone": "Asia/Karachi",
+    "errorWorkflow": "WaAgentErrors001"
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": []
+}
