@@ -1131,6 +1131,23 @@
             }
           },
           {
+            "name": "language",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^(en|ur|roman_ur)$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Language"
+            }
+          },
+          {
             "name": "page",
             "in": "query",
             "required": false,
@@ -4191,6 +4208,17 @@
             ],
             "title": "Last Seen At"
           },
+          "language": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language"
+          },
           "created_at": {
             "type": "string",
             "format": "date-time",
@@ -4342,6 +4370,16 @@
             "type": "boolean",
             "title": "Is Active",
             "default": true
+          },
+          "language": {
+            "type": "string",
+            "enum": [
+              "en",
+              "ur",
+              "roman_ur"
+            ],
+            "title": "Language",
+            "default": "en"
           }
         },
         "type": "object",
@@ -4394,6 +4432,16 @@
             "type": "boolean",
             "title": "Is Active",
             "default": true
+          },
+          "language": {
+            "type": "string",
+            "enum": [
+              "en",
+              "ur",
+              "roman_ur"
+            ],
+            "title": "Language",
+            "default": "en"
           },
           "id": {
             "type": "string",
@@ -4496,6 +4544,22 @@
               }
             ],
             "title": "Is Active"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "en",
+                  "ur",
+                  "roman_ur"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language"
           }
         },
         "type": "object",

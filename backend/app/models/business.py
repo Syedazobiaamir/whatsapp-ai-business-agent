@@ -19,6 +19,8 @@ class BusinessFAQ(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     keywords: Mapped[str | None] = mapped_column(Text)  # "price, cost, quote"
     priority: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
     is_active: Mapped[bool] = mapped_column(Boolean, server_default=true(), default=True)
+    # en | ur | roman_ur: the FAQ fallback prefers answers in the customer's language (Stage 14)
+    language: Mapped[str] = mapped_column(String(12), default="en", server_default="en")
 
     # Full-text search vector, computed by PostgreSQL itself whenever a row changes.
     # The Support Agent searches this to find relevant FAQs for a customer question.
@@ -34,6 +36,7 @@ class BusinessFAQ(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __table_args__ = (
         Index("ix_business_faqs_search_vector", "search_vector", postgresql_using="gin"),
         Index("ix_business_faqs_category_active", "category", "is_active"),
+        Index("ix_business_faqs_language_active", "language", "is_active"),
     )
 
 

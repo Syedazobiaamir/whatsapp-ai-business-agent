@@ -2,7 +2,7 @@
 import uuid
 from datetime import datetime
 from decimal import Decimal
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 
 from pydantic import BaseModel, BeforeValidator, Field, model_validator
 
@@ -18,6 +18,7 @@ class FAQBase(BaseModel):
     keywords: str | None = Field(default=None, max_length=500)
     priority: int = Field(default=0, ge=0, le=100)
     is_active: bool = True
+    language: Literal["en", "ur", "roman_ur"] = "en"
 
 
 class FAQCreate(FAQBase):
@@ -31,6 +32,7 @@ class FAQUpdate(BaseModel):
     keywords: str | None = Field(default=None, max_length=500)
     priority: int | None = Field(default=None, ge=0, le=100)
     is_active: bool | None = None
+    language: Literal["en", "ur", "roman_ur"] | None = None
 
 
 class FAQOut(ORMModel, FAQBase):

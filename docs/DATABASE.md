@@ -15,6 +15,7 @@ erDiagram
         text keywords
         int priority
         bool is_active
+        varchar language
         tsvector search_vector
         uuid id PK
         timestamptz created_at
@@ -29,6 +30,7 @@ erDiagram
         bool marketing_opt_in
         timestamptz opted_out_at
         timestamptz last_seen_at
+        varchar language
         uuid id PK
         timestamptz created_at
         timestamptz updated_at
@@ -234,12 +236,13 @@ erDiagram
 | `keywords` | text | yes |  |
 | `priority` | int | no |  |
 | `is_active` | bool | no |  |
+| `language` | varchar | no |  |
 | `search_vector` | tsvector | no | computed by PostgreSQL |
 | `id` | uuid | no | primary key |
 | `created_at` | timestamptz | no |  |
 | `updated_at` | timestamptz | no |  |
 
-Indexes: `ix_business_faqs_category_active` (category, is_active) · `ix_business_faqs_search_vector` (search_vector)
+Indexes: `ix_business_faqs_category_active` (category, is_active) · `ix_business_faqs_language_active` (language, is_active) · `ix_business_faqs_search_vector` (search_vector)
 
 ### `customers`
 
@@ -253,6 +256,7 @@ Indexes: `ix_business_faqs_category_active` (category, is_active) · `ix_busines
 | `marketing_opt_in` | bool | no |  |
 | `opted_out_at` | timestamptz | yes |  |
 | `last_seen_at` | timestamptz | yes |  |
+| `language` | varchar | yes |  |
 | `id` | uuid | no | primary key |
 | `created_at` | timestamptz | no |  |
 | `updated_at` | timestamptz | no |  |

@@ -3,7 +3,7 @@ import { ArrowLeft, Bot, Clock, Hand, Search, Send, User, UserRound } from "luci
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link, useParams } from "react-router";
 import { api, qs } from "../api/client";
-import type { ConversationDetail, Conversation, Message, Page } from "../api/types";
+import { LANG_LABEL, type ConversationDetail, type Conversation, type Message, type Page } from "../api/types";
 import { useAuth } from "../auth";
 import { Badge, Button, Card, Empty, ErrorNote, Input, PageHeader, Select, Spinner, cx, label, timeAgo } from "../components/ui";
 
@@ -44,7 +44,7 @@ function ConversationList({ activeId }: { activeId?: string }) {
                   <span className="shrink-0 text-xs text-ink-3">{timeAgo(c.last_message_at)}</span>
                 </div>
                 <div className="mt-0.5 flex items-center justify-between gap-2">
-                  <span className="truncate text-xs text-ink-3">{c.last_message_preview ?? "—"}</span>
+                  <span dir="auto" className="truncate text-xs text-ink-3">{c.last_message_preview ?? "—"}</span>
                   <span className="flex shrink-0 gap-1">
                     {c.has_pending_handoff && <Badge tone="bad"><Hand size={11} aria-hidden /> Handoff</Badge>}
                     {c.mode === "human" && !c.has_pending_handoff && <Badge tone="warn">Human</Badge>}
@@ -80,7 +80,7 @@ function Bubble({ m }: { m: Message }) {
           {meta?.fallback && <Badge tone="warn">fallback</Badge>}
           {meta?.guardrails?.length ? <Badge tone="bad">guardrail</Badge> : null}
         </div>
-        <p className="whitespace-pre-wrap break-words">{m.body}</p>
+        <p dir="auto" className="whitespace-pre-wrap break-words">{m.body}</p>
         <div className="mt-1 flex flex-wrap justify-end gap-2 text-[11px] text-ink-3">
           {meta?.modules?.length ? <span>{meta.modules.join(" → ")}</span> : null}
           {typeof meta?.confidence === "number" && <span>conf {meta.confidence.toFixed(2)}</span>}
@@ -129,6 +129,7 @@ function ChatView({ id }: { id: string }) {
       actions={
         <span className="flex flex-wrap items-center gap-2">
           <ModeBadge mode={c.mode} />
+          {c.customer.language && <Badge>{LANG_LABEL[c.customer.language]}</Badge>}
           {c.has_pending_handoff && <Badge tone="bad"><Hand size={12} aria-hidden /> Handoff open</Badge>}
           <Badge tone={c.within_24h_window ? "good" : "neutral"}>
             <Clock size={12} aria-hidden /> {c.within_24h_window ? "24h window open" : "24h window closed"}
@@ -147,7 +148,7 @@ function ChatView({ id }: { id: string }) {
             onSubmit={(e: FormEvent) => { e.preventDefault(); if (text.trim()) reply.mutate(); }}>
         <label className="flex-1">
           <span className="sr-only">Reply</span>
-          <Input value={text} onChange={(e) => setText(e.target.value)} maxLength={4096} disabled={!canReply}
+          <Input dir="auto" value={text} onChange={(e) => setText(e.target.value)} maxLength={4096} disabled={!canReply}
             placeholder={!staff ? "Read-only role" : c.mode === "ai" ? "Take over to reply as a person" :
               !c.within_24h_window ? "24h window closed: only templates allowed" : "Type a WhatsApp reply…"} />
         </label>

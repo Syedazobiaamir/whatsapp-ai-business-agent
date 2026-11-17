@@ -10,6 +10,7 @@ from typing import Any
 from sqlalchemy import Text, cast, desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.ai.language import Lang, detect_language, search_text
 from app.models import AppSetting, BusinessFAQ, Conversation, Customer, Lead, Message, Service
 from app.models.enums import SenderType
 
@@ -43,16 +44,20 @@ class AgentContext:
     ai_config: dict[str, Any]
     lead_rules: dict[str, Any]
     all_faq_answers: list[str] = field(default_factory=list)   # for the price guardrail
+    language: Lang = "en"                                       # en | ur | roman_ur (Stage 14)
 
 
-async def search_faqs(session: AsyncSession, text: str, limit: int = 5) -> list[FAQHit]:
+async def search_faqs(session: AsyncSession, text: str, limit: int = 5, language: Lang = "en") -> list[FAQHit]:
     """Full-text search with OR between words.
 
     plainto_tsquery("how much does an online store cost") = 'much' & 'onlin' & 'store' & 'cost'
     (AND: every word must match -> usually nothing). We swap & for | so ANY word can match,
     then ts_rank puts the FAQs matching the most words first.
+    Stage 14: Urdu / Roman Urdu stop words are removed first, and FAQs written in the customer's
+    language are ranked before others.
     """
-    if not text or not text.strip():
+    text = search_text(text or "", language)
+    if not text.strip():
         return []
     tsq = func.to_tsquery("english", func.replace(
         cast(func.plainto_tsquery("english", text), Text), "&", "|"))
@@ -60,10 +65,18 @@ async def search_faqs(session: AsyncSession, text: str, limit: int = 5) -> list[
     rows = await session.execute(
         select(BusinessFAQ.id, BusinessFAQ.question, BusinessFAQ.answer, rank)
         .where(BusinessFAQ.is_active.is_(True), BusinessFAQ.search_vector.op("@@")(tsq))
-        .order_by(desc("rank"), BusinessFAQ.priority.desc())
+        .order_by((BusinessFAQ.language == language).desc(), desc("rank"), BusinessFAQ.priority.desc())
         .limit(limit)
     )
     return [FAQHit(str(r.id), r.question, r.answer, float(r.rank)) for r in rows]
+
+
+def message_language(text: str | None, customer: Customer) -> Lang:
+    """Language of this message; if it is too short to tell ("STOP", "ok"), the customer's last one."""
+    lang, confident = detect_language(text)
+    if confident:
+        return lang
+    return customer.language if customer.language in ("en", "ur", "roman_ur") else lang
 
 
 async def _setting(session: AsyncSession, key: str, default: dict) -> dict:
@@ -92,10 +105,12 @@ async def load_context(session: AsyncSession, message: Message) -> AgentContext:
     all_answers = (await session.scalars(
         select(BusinessFAQ.answer).where(BusinessFAQ.is_active.is_(True)))).all()
 
+    language = message_language(message.body, customer)
     return AgentContext(
         message=message, conversation=conversation, customer=customer, lead=lead,
         history=list(reversed(recent)),
-        faqs=await search_faqs(session, message.body or ""),
+        faqs=await search_faqs(session, message.body or "", language=language),
+        language=language,
         services=list(services),
         business_info=await _setting(session, "business_info", {}),
         ai_config=ai_config,

@@ -37,3 +37,6 @@ class Customer(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     opted_out_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     last_seen_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # Language of the customer's latest clear message: en | ur (Urdu script) | roman_ur (Stage 14).
+    # Used for fixed replies (handoff, STOP...) when a message itself is too short to tell.
+    language: Mapped[str | None] = mapped_column(String(12))

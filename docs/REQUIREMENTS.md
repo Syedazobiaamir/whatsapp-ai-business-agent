@@ -72,3 +72,13 @@ Required folder structure ✅ · tests for webhook verification, incoming proces
 | Sales is notified about hot leads | WA 2 tests, dedupe tests 🟡 (live run needs Gemini to produce a Hot lead) |
 | Human handoff works | e2e #5-6 |
 | An automation error is detected and handled | e2e #9 + live drill |
+
+## Extra (Stage 14): Urdu and Roman Urdu
+| Requirement | Where | Evidence | Status |
+|---|---|---|---|
+| Detect English / Urdu / Roman Urdu | `app/ai/language.py` (rules, no AI) | `test_language.py` (10 cases) | ✅ |
+| Replies in the customer's language (handoff, STOP/START, safe price, FAQ fallback) | orchestrator + 8 Urdu/Roman Urdu FAQs | `test_language.py` | ✅ |
+| "Talk to a human" in Urdu / Roman Urdu | built-in phrases | `test_handoff_in_customers_language` | ✅ |
+| Price guardrail understands Urdu digits, روپے/rupay, hazar/lakh | `guardrails.py` | `test_guardrail_understands_urdu_amounts` | ✅ |
+| Right-to-left display on the dashboard | `dir="auto"` | browser check: bubbles `rtl` | ✅ |
+| Gemini told the customer's language | prompt line | `test_prompt_tells_gemini_the_language` | 🟡 live needs Gemini key |

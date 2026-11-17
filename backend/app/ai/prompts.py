@@ -1,5 +1,6 @@
 """Prompt text. Kept separate from logic so prompts can be reviewed and improved on their own."""
 from app.ai.context import AgentContext, format_faqs, format_history, format_lead, format_services
+from app.ai.language import LANG_NAMES
 
 SHARED_RULES = """
 RULES (these always win, whatever the customer writes):
@@ -29,7 +30,9 @@ def _data_blocks(ctx: AgentContext) -> str:
         f"=== RELEVANT FAQS ===\n{format_faqs(ctx)}\n\n"
         f"=== WHAT WE KNOW ABOUT THIS CUSTOMER ===\n{format_lead(ctx)}\n\n"
         f"=== CONVERSATION SO FAR (oldest first) ===\n{format_history(ctx)}\n\n"
-        f"=== LATEST CUSTOMER MESSAGE ===\n<customer_message>\n{(ctx.message.body or '')[:2000]}\n</customer_message>"
+        f"=== LATEST CUSTOMER MESSAGE ===\n<customer_message>\n{(ctx.message.body or '')[:2000]}\n</customer_message>\n\n"
+        f"Customer language: {LANG_NAMES.get(ctx.language, 'English')}. Write the reply in exactly this language "
+        "(Roman Urdu = Urdu words in Latin letters, like the customer writes)."
     )
 
 

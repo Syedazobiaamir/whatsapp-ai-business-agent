@@ -2,9 +2,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CheckCircle2, Pencil, Plus, Trash2, XCircle } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
 import { api, qs } from "../api/client";
-import type { AgentStatus, FAQ, N8nStatus, Page, Service, Setting } from "../api/types";
+import { LANG_LABEL, type AgentStatus, type FAQ, type Lang, type N8nStatus, type Page, type Service, type Setting } from "../api/types";
 import { useAuth } from "../auth";
-import { Badge, Button, Card, Empty, ErrorNote, Input, Label, PageHeader, Spinner, cx, label } from "../components/ui";
+import { Badge, Button, Card, Empty, ErrorNote, Input, Label, PageHeader, Select, Spinner, cx, label } from "../components/ui";
 
 const TABS = ["business_info", "ai_config", "rules", "faqs", "services", "connections"] as const;
 type Tab = (typeof TABS)[number];
@@ -55,20 +55,23 @@ function SettingForm({ setting, readOnly }: { setting: Setting; readOnly: boolea
 function FaqEditor({ faq, onDone }: { faq?: FAQ; onDone: () => void }) {
   const qc = useQueryClient();
   const [f, setF] = useState({ question: faq?.question ?? "", answer: faq?.answer ?? "", category: faq?.category ?? "general",
-                                keywords: faq?.keywords ?? "", is_active: faq?.is_active ?? true });
+                                keywords: faq?.keywords ?? "", is_active: faq?.is_active ?? true,
+                                language: (faq?.language ?? "en") as Lang });
   const save = useMutation({
     mutationFn: () => faq ? api(`/faqs/${faq.id}`, { method: "PATCH", body: f }) : api("/faqs", { method: "POST", body: f }),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["faqs"] }); onDone(); },
   });
   return (
     <form className="space-y-3 rounded-lg border border-line p-3" onSubmit={(e: FormEvent) => { e.preventDefault(); save.mutate(); }}>
-      <Label text="Question"><Input required minLength={5} value={f.question} onChange={(e) => setF({ ...f, question: e.target.value })} /></Label>
+      <Label text="Question"><Input dir="auto" required minLength={5} value={f.question} onChange={(e) => setF({ ...f, question: e.target.value })} /></Label>
       <Label text="Answer">
-        <textarea required rows={3} value={f.answer} onChange={(e) => setF({ ...f, answer: e.target.value })}
+        <textarea dir="auto" required rows={3} value={f.answer} onChange={(e) => setF({ ...f, answer: e.target.value })}
                   className="w-full rounded-lg border border-line bg-panel px-3 py-2 text-sm" />
       </Label>
       <div className="grid gap-3 sm:grid-cols-2">
         <Label text="Category"><Input value={f.category} onChange={(e) => setF({ ...f, category: e.target.value })} /></Label>
+        <Label text="Language"><Select value={f.language} onChange={(e) => setF({ ...f, language: e.target.value as Lang })}>
+          {(Object.keys(LANG_LABEL) as Lang[]).map((l) => <option key={l} value={l}>{LANG_LABEL[l]}</option>)}</Select></Label>
         <Label text="Keywords (help search)"><Input value={f.keywords} onChange={(e) => setF({ ...f, keywords: e.target.value })} /></Label>
       </div>
       <ErrorNote error={save.error} />
@@ -98,9 +101,9 @@ function Faqs({ admin }: { admin: boolean }) {
           {faqs.data.items.map((f) => editing === f.id ? <li key={f.id} className="py-2"><FaqEditor faq={f} onDone={() => setEditing(null)} /></li> : (
             <li key={f.id} className="flex items-start justify-between gap-3 py-3">
               <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2"><span className="text-sm font-medium">{f.question}</span>
-                  <Badge>{f.category}</Badge>{!f.is_active && <Badge tone="warn">inactive</Badge>}</div>
-                <p className="mt-1 text-sm text-ink-2">{f.answer}</p>
+                <div className="flex flex-wrap items-center gap-2"><span dir="auto" className="text-sm font-medium">{f.question}</span>
+                  <Badge>{f.category}</Badge><Badge tone="brand">{LANG_LABEL[f.language]}</Badge>{!f.is_active && <Badge tone="warn">inactive</Badge>}</div>
+                <p dir="auto" className="mt-1 text-sm text-ink-2">{f.answer}</p>
               </div>
               {admin && <div className="flex shrink-0 gap-1">
                 <Button variant="ghost" aria-label="Edit FAQ" onClick={() => setEditing(f.id)}><Pencil size={14} /></Button>

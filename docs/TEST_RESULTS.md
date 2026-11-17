@@ -37,6 +37,9 @@ Each critical rule was **deliberately broken** to confirm the suite fails:
 | 74 s test run (`localhost` → IPv6 timeout) | Timing (Stage 3) | `127.0.0.1` → 11 s |
 | Coverage under-reported (76 % instead of 94 %) | Suspicious numbers (Stage 10) | `concurrency = thread,greenlet` |
 
+## Urdu and Roman Urdu (Stage 14)
+27 tests: language detection (incl. greetings like AOA / Assalam o alaikum), Urdu and Roman Urdu FAQ fallback, handoff phrases and replies in 3 languages, STOP confirmation in the remembered language, Urdu-aware price guardrail. Two bugs found while building it: greetings were not recognised, and the old guardrail read the end of "hours 9" as the amount "rs 9" (fixed + regression test).
+
 ## Edge cases & abuse tested
 10 identical webhooks **in parallel** → 1 message · 5 parallel AI calls → 1 reply · Urdu / emoji round-trip · 3 MB+ payload → 413 · unsigned or forged webhook → 401, nothing stored · `alg: none` JWT → 401 · SQL-injection / `%` / `<script>` search strings → harmless (parameterised queries) · reply > 4096 chars or blank → 422 · database down → `/health` 503 instead of a crash
 

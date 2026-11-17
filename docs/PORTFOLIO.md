@@ -4,7 +4,7 @@
 An AI WhatsApp sales and support agent for small businesses: it answers customers 24/7, qualifies leads as Hot / Warm / Cold, hands complex chats to people, and recovers from its own failures, without ever sending a message twice.
 
 ## Short (GitHub "About" / LinkedIn headline, ~300 characters)
-WhatsApp AI Business Agent: FastAPI + PostgreSQL + Gemini + n8n + React. Answers FAQs, qualifies leads with explainable rules, human handoff, consent-aware follow-ups, self-healing error recovery. 197 backend tests (94% coverage), end-to-end tested in Docker.
+WhatsApp AI Business Agent: FastAPI + PostgreSQL + Gemini + n8n + React. Answers FAQs, qualifies leads with explainable rules, human handoff, consent-aware follow-ups, self-healing error recovery. 224 backend tests (94% coverage), end-to-end tested in Docker.
 
 ## Project description (LinkedIn project / portfolio site)
 Small businesses lose leads on WhatsApp because nobody answers at night and nobody follows up. I built a complete automation system, not just a chatbot:
@@ -13,11 +13,12 @@ Small businesses lose leads on WhatsApp because nobody answers at night and nobo
 - **Every conversation becomes a qualified lead.** The AI extracts needs, budget and timeline; transparent rules score the lead Hot / Warm / Cold and explain why, and sales is emailed once when a lead turns hot.
 - **People stay in control.** Complaints or "talk to a human" pause the AI, assign the least-busy agent, and let them reply from the dashboard.
 - **Follow-ups respect the rules:** marketing consent, WhatsApp's 24-hour window and templates, and human approval before sending.
+- **Speaks like the customers do:** English, Urdu (right-to-left) and Roman Urdu are detected automatically; fixed replies, FAQ answers and the price guardrail work in all three.
 - **It recovers from failures safely.** Errors are grouped and classified. Safe ones retry themselves; risky ones (that could duplicate a customer message) wait for an admin's approval.
 
 **Stack:** Python 3.12, FastAPI, Pydantic, SQLAlchemy (async), Alembic, PostgreSQL · Google Gemini (structured JSON output) · n8n (6 workflows) · WhatsApp Cloud API · React 19, TypeScript, Tailwind, TanStack Query · Docker Compose, nginx, Caddy (HTTPS).
 
-**Quality:** 197 backend tests (94% coverage), 18 frontend tests, a 13-step end-to-end test that runs against the real n8n + backend + database (local and Docker), and deliberate-bug checks proving the tests catch broken rules.
+**Quality:** 224 backend tests (94% coverage), 18 frontend tests, a 13-step end-to-end test that runs against the real n8n + backend + database (local and Docker), and deliberate-bug checks proving the tests catch broken rules.
 
 ## CV bullets
 - Built an AI WhatsApp business agent (FastAPI, PostgreSQL, Gemini, n8n, React) that answers customers, qualifies leads Hot/Warm/Cold with explainable rules, and hands complex chats to human agents.

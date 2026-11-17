@@ -28,6 +28,7 @@ async def list_faqs(
     q: Annotated[str | None, Query(max_length=200)] = None,
     category: str | None = None,
     active: bool | None = None,
+    language: Annotated[str | None, Query(pattern="^(en|ur|roman_ur)$")] = None,
 ):
     stmt = select(BusinessFAQ).order_by(BusinessFAQ.priority.desc(), BusinessFAQ.question)
     if q:
@@ -39,6 +40,8 @@ async def list_faqs(
         stmt = stmt.where(BusinessFAQ.category == category)
     if active is not None:
         stmt = stmt.where(BusinessFAQ.is_active == active)
+    if language:
+        stmt = stmt.where(BusinessFAQ.language == language)
     items, total = await paginate(session, stmt, pg.page, pg.size)
     return Page(items=items, total=total, page=pg.page, size=pg.size)
 

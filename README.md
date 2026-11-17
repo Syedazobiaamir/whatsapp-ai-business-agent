@@ -6,7 +6,7 @@
 
 `FastAPI` · `PostgreSQL` · `Google Gemini` · `n8n` · `WhatsApp Cloud API` · `React + TypeScript + Tailwind` · `Docker`
 
-**197 backend tests (94% coverage) · 18 frontend tests · 13/13 end-to-end checks against the running stack (local and Docker) · CI on every push (PostgreSQL 16 + 17, frontend, Docker builds)**
+**224 backend tests (94% coverage) · 18 frontend tests · 13/13 end-to-end checks against the running stack (local and Docker) · CI on every push (PostgreSQL 16 + 17, frontend, Docker builds)**
 
 | Dashboard overview | Conversation with human handoff |
 |---|---|
@@ -22,6 +22,7 @@
 | **People stay in control** | Complaints or "talk to a human" pause the AI, assign the least-busy agent and let them reply from the dashboard; the AI resumes when appropriate |
 | **Follow-ups that respect the rules** | Marketing consent (STOP/START), WhatsApp's 24-hour window and templates, and **human approval** before anything is sent |
 | **Self-healing automation** | Errors are grouped and classified; safe ones retry with backoff; risky ones (could duplicate a message) need **admin approval**, and every decision is audited |
+| **Speaks your customers' language** | English, **Urdu (اردو)** and **Roman Urdu** are detected automatically; FAQ answers, handoff and opt-out messages and price guardrails all work in each language, and Urdu shows right-to-left on the dashboard |
 | **One dashboard** | Overview, Leads, Conversations, Automation monitoring, Settings (FAQ, AI, rules), Team; roles admin / sales agent / viewer |
 
 ## Architecture
@@ -45,6 +46,10 @@ flowchart LR
 **Live n8n monitoring on the dashboard** (workflow status + execution history, including automatic `retry` runs):
 
 ![Automation monitoring](docs/screenshots/automation-monitoring.png)
+
+**An Urdu conversation** (right-to-left, language detected automatically):
+
+![Urdu conversation](docs/screenshots/conversation-urdu.png)
 
 ## Quick start (Windows, Docker)
 ```powershell

@@ -8,6 +8,7 @@ from sqlalchemy import func, select, text, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.ai.language import detect_language
 from app.config import Settings
 from app.models import AutomationError, Conversation, Customer, HumanAgent, Message
 from app.models.enums import (
@@ -116,6 +117,11 @@ async def record_inbound(session: AsyncSession, msg: InboundMessage) -> tuple[Me
     # greatest(): events can arrive out of order; never move the 24h window backwards.
     conv.last_customer_message_at = func.greatest(Conversation.last_customer_message_at, msg.sent_at)
     conv.last_message_at = func.greatest(Conversation.last_message_at, msg.sent_at)
+
+    # Stage 14: remember the customer's language when this message makes it clear.
+    lang, confident = detect_language(msg.body)
+    if confident:
+        customer.language = lang
 
     keyword = (msg.body or "").strip().upper()
     if keyword in OPT_OUT_WORDS and customer.opted_out_at is None:

@@ -140,6 +140,54 @@
       "question": "How can I talk to a person?",
       "answer": "Just type 'talk to a human' and a team member will join this chat during business hours.",
       "keywords": "human, person, agent, call, representative, speak"
+    },
+    {
+      "category": "pricing", "language": "roman_ur",
+      "question": "Website kitne ki banti hai?",
+      "answer": "Business website aam taur par 400 se 1,200 USD tak hoti hai, pages aur features par depend karta hai. Aap ki zaroorat samajh kar hum sahi quote dete hain.",
+      "keywords": "website, qeemat, price, kitne, rate, kharcha, cost"
+    },
+    {
+      "category": "pricing", "language": "roman_ur",
+      "question": "Online store kitne ka banta hai?",
+      "answer": "E-commerce store aam taur par 900 se 3,000 USD tak hota hai, platform aur products ki tadaad par depend karta hai.",
+      "keywords": "online store, dukaan, shop, ecommerce, qeemat, kitne"
+    },
+    {
+      "category": "general", "language": "roman_ur",
+      "question": "Aap ke auqat-e-kaar kya hain?",
+      "answer": "Hum Monday se Friday, subah 10 baje se shaam 7 baje tak (Pakistan time) available hain. Baqi waqt hamara AI assistant jawab deta hai.",
+      "keywords": "auqat, timing, waqt, office, khula, band"
+    },
+    {
+      "category": "process", "language": "roman_ur",
+      "question": "Website banne mein kitna waqt lagta hai?",
+      "answer": "Business website 2 se 4 hafte, online store 3 se 6 hafte aur mobile app aam taur par 8 se 16 hafte leti hai.",
+      "keywords": "waqt, time, kitne din, hafte, delivery, kab tak"
+    },
+    {
+      "category": "pricing", "language": "ur",
+      "question": "ویب سائٹ کی قیمت کیا ہے؟",
+      "answer": "بزنس ویب سائٹ عام طور پر 400 سے 1,200 USD تک ہوتی ہے، جو صفحات اور فیچرز پر منحصر ہے۔ آپ کی ضرورت سمجھ کر ہم درست قیمت بتاتے ہیں۔",
+      "keywords": "ویب سائٹ قیمت ریٹ خرچہ"
+    },
+    {
+      "category": "pricing", "language": "ur",
+      "question": "آن لائن اسٹور کی قیمت کیا ہے؟",
+      "answer": "ای کامرس اسٹور عام طور پر 900 سے 3,000 USD تک ہوتا ہے، جو پلیٹ فارم اور پروڈکٹس کی تعداد پر منحصر ہے۔",
+      "keywords": "آن لائن اسٹور دکان قیمت"
+    },
+    {
+      "category": "general", "language": "ur",
+      "question": "آپ کے اوقاتِ کار کیا ہیں؟",
+      "answer": "ہم پیر سے جمعہ، صبح 10 بجے سے شام 7 بجے تک (پاکستان وقت) دستیاب ہیں۔ باقی وقت ہمارا AI اسسٹنٹ جواب دیتا ہے۔",
+      "keywords": "اوقات وقت ٹائمنگ دفتر"
+    },
+    {
+      "category": "process", "language": "ur",
+      "question": "ویب سائٹ بننے میں کتنا وقت لگتا ہے؟",
+      "answer": "بزنس ویب سائٹ 2 سے 4 ہفتے، آن لائن اسٹور 3 سے 6 ہفتے اور موبائل ایپ عام طور پر 8 سے 16 ہفتے لیتی ہے۔",
+      "keywords": "وقت ہفتے ڈیلیوری کب"
     }
   ]
 }

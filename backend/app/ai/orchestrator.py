@@ -25,8 +25,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.ai.agents import SalesAgent, SupportAgent
 from app.ai.context import AgentContext, load_context
+from app.ai.language import BUILTIN_HANDOFF_PHRASES, handoff_reply
+from app.ai.language import reply as lang_reply
 from app.ai.guardrails import (
-    SAFE_PRICE_REPLY,
     allowed_amounts,
     clean_reply,
     find_unapproved_amounts,
@@ -153,12 +154,11 @@ class Orchestrator:
 
         if keyword in OPT_OUT_WORDS:
             plan.intent = "opt_out"
-            plan.reply = (f"You have been unsubscribed from {biz} marketing messages. "
-                          "You can still message us any time. Reply START to subscribe again.")
+            plan.reply = lang_reply("opt_out", ctx.language, name=biz)
             return plan
         if keyword in OPT_IN_WORDS:
             plan.intent = "opt_in"
-            plan.reply = f"Thanks! You're subscribed to updates from {biz}. Reply STOP any time to opt out."
+            plan.reply = lang_reply("opt_in", ctx.language, name=biz)
             return plan
 
         if self._asks_for_human(text, ctx.ai_config.get("handoff_keywords", [])):
@@ -225,20 +225,21 @@ class Orchestrator:
             bad = find_unapproved_amounts(plan.reply, allowed_amounts(ctx.services, ctx.all_faq_answers))
             if bad:
                 plan.guardrails.extend(f"unapproved_amount: {b}" for b in bad)
-                plan.reply = SAFE_PRICE_REPLY
+                plan.reply = lang_reply("safe_price", ctx.language)
                 logger.warning("Guardrail replaced a reply containing %s", bad)
 
     @staticmethod
     def _asks_for_human(text: str, keywords: list[str]) -> bool:
-        low = text.lower()
-        return any(re.search(rf"\b{re.escape(k.lower())}\b", low) for k in keywords if k.strip())
+        low = " ".join(text.lower().split())
+        if any(re.search(rf"\b{re.escape(k.lower())}\b", low) for k in keywords if k.strip()):
+            return True
+        # Built-in Urdu / Roman Urdu phrases ("kisi insaan se baat karni hai", "کسی سے بات")
+        return any(p in low for p in BUILTIN_HANDOFF_PHRASES)
 
     @staticmethod
     def _handoff_reply(ctx: AgentContext) -> str:
         b = ctx.business_info
-        hours = f" (our hours: {b['business_hours']})" if b.get("business_hours") else ""
-        return (f"Thanks for your patience! I'm connecting you with a member of the "
-                f"{b.get('name', 'our')} team. They'll reply here as soon as possible{hours}.")
+        return handoff_reply(ctx.language, b.get("name", "our"), b.get("business_hours"))
 
     # ------------------------------------------------------------------ apply
     async def _apply(self, ctx: AgentContext, plan: Plan) -> tuple[AgentDecision, Message | None]:

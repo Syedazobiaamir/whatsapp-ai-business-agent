@@ -1,5 +1,8 @@
 // TypeScript mirrors of the backend's Pydantic response schemas.
 
+export type Lang = "en" | "ur" | "roman_ur";
+export const LANG_LABEL: Record<Lang, string> = { en: "English", ur: "اردو", roman_ur: "Roman Urdu" };
+
 export type Role = "admin" | "sales_agent" | "viewer";
 export type Temperature = "hot" | "warm" | "cold";
 export type LeadStatus = "new" | "contacted" | "qualified" | "proposal" | "won" | "lost";
@@ -33,6 +36,7 @@ export interface Customer {
   marketing_opt_in: boolean;
   opted_out_at: string | null;
   last_seen_at: string | null;
+  language?: Lang | null;
   created_at: string;
 }
 
@@ -128,6 +132,7 @@ export interface FAQ {
   keywords: string | null;
   priority: number;
   is_active: boolean;
+  language: Lang;
 }
 
 export interface Service {

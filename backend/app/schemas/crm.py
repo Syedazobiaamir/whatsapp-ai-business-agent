@@ -32,6 +32,7 @@ class CustomerOut(ORMModel):
     marketing_opt_in: bool
     opted_out_at: datetime | None
     last_seen_at: datetime | None
+    language: str | None = None
     created_at: datetime
 
 

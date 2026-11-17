@@ -17,6 +17,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "backend"))
 from sqlalchemy import delete, select  # noqa: E402
 
 from app.db import SessionLocal, engine  # noqa: E402
+from app.ai.language import detect_language  # noqa: E402
 from app.ai.lead_qualification import qualify  # noqa: E402
 from app.models import (  # noqa: E402
     AppSetting, Conversation, Customer, FollowUpTask, HandoffRequest, Lead, LeadActivity, Message, Service,
@@ -67,6 +68,15 @@ PEOPLE = [
     ], dict(temperature=LeadTemperature.COLD, score=5, status=LeadStatus.NEW, requirements=None, services=[],
             budget_text=None, budget=None, timeline=None, timeline_days=None, decision_maker=None, signals=[],
             reason="COLD (5/100): intent: service inquiry")),
+    ("0005", "Fatima Noor", "Noor Boutique", None, True, ConversationMode.AI, 50, [
+        ("customer", "السلام علیکم! آن لائن اسٹور کی قیمت کیا ہے؟", None),
+        ("ai", "وعلیکم السلام! ای کامرس اسٹور عام طور پر 900 سے 3,000 USD تک ہوتا ہے، جو پلیٹ فارم اور "
+               "پروڈکٹس کی تعداد پر منحصر ہے۔ آپ کتنی پروڈکٹس بیچنا چاہتی ہیں؟", "pricing"),
+        ("customer", "تقریباً 50 کپڑوں کے ڈیزائن، اگلے مہینے تک", None),
+    ], dict(temperature=LeadTemperature.WARM, score=0, status=LeadStatus.NEW,
+            requirements="Online boutique for about 50 clothing designs", services=["E-commerce Store"],
+            budget_text=None, budget=None, timeline="next month", timeline_days=30, decision_maker=None,
+            signals=[], reason="")),
     ("0004", "Sana Malik", "Malik Clinics", None, True, ConversationMode.HUMAN, 8, [
         ("customer", "I paid the advance last week but nobody contacted me. Very disappointed.", None),
         ("ai", "Thanks for your patience! I'm connecting you with a member of the NovaByte Digital Studio team. "
@@ -88,7 +98,8 @@ async def create(s) -> None:
     for suffix, name, company, email, opt_in, mode, minutes_ago, chat, lead_data in PEOPLE:
         start = NOW - timedelta(minutes=minutes_ago)
         c = Customer(wa_id=PREFIX + "0" + suffix, name=name, company=company, email=email,
-                     marketing_opt_in=opt_in, last_seen_at=start)
+                     marketing_opt_in=opt_in, last_seen_at=start,
+                     language=detect_language(next(x for s_, x, _ in reversed(chat) if s_ == "customer"))[0])  # like the app: latest message
         s.add(c)
         await s.flush()
         conv = Conversation(customer_id=c.id, mode=mode)
