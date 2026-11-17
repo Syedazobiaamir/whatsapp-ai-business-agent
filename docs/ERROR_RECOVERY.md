@@ -21,7 +21,7 @@ failure ─► classify ─┼─ needs a fix (401 token, bad config) ───�
 * **Grouping:** a fingerprint (source + step + type + normalised message) turns repeats into **one row ×N** with **one alert**.
 * **Give-up rule:** after `max_retries` (3) a retrying error becomes OPEN and is alerted.
 * **Never resend a delivered message:** before a retry the backend re-checks the message status; if a later webhook proved delivery, the error is resolved without sending.
-* **n8n retries** use n8n's public API `POST /executions/{id}/retry`, which resumes from the failed node. This needs `N8N_API_KEY`. Without it, the dashboard says honestly "Automatic retry impossible".
+* **n8n retries** use n8n's public API `POST /executions/{id}/retry`, which resumes from the failed node. This needs `N8N_API_KEY`. Create it in n8n (Settings → n8n API) with **only** the scopes `workflow:list`, `workflow:read`, `execution:list`, `execution:read` and `execution:retry` (least privilege). Without it, the dashboard says honestly "Automatic retry impossible". Verified live: see [TEST_RESULTS.md](TEST_RESULTS.md#verified-live-against-the-real-n8n-api-2026-11-17).
 
 ## WA 5 - Error Handler & Recovery
 * **Error Trigger:** report to the backend → if `alert` → Gmail or log → mark alerted.

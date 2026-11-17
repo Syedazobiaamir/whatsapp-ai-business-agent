@@ -40,6 +40,10 @@ flowchart LR
 |---|---|
 | ![WA 1](docs/screenshots/n8n/01-incoming-message.png) | ![Errors](docs/screenshots/automation-errors.png) |
 
+**Live n8n monitoring on the dashboard** (workflow status + execution history, including automatic `retry` runs):
+
+![Automation monitoring](docs/screenshots/automation-monitoring.png)
+
 ## Quick start (Windows, Docker)
 ```powershell
 git clone <repository-url> whatsapp-ai-business-agent; cd whatsapp-ai-business-agent
@@ -89,4 +93,4 @@ docs/              everything above
 ```
 
 ## Status & honest scope
-Complete and tested with **mock WhatsApp** and a **fake Gemini** that follows the real SDK interface. Going live needs a Meta WhatsApp Business account and a Gemini key (free test tiers are documented), plus a server for production. **No paid service is enabled by this project.**
+Complete and tested with **mock WhatsApp** and a **fake Gemini** that follows the real SDK interface; n8n monitoring and automatic retries are verified live against the real n8n API. Going live needs a Meta WhatsApp Business account and a Gemini key (free test tiers are documented), plus a server for production. **No paid service is enabled by this project.**

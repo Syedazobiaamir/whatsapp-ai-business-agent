@@ -15,7 +15,7 @@
 | Notify sales representatives | WA 2 (hot lead) + WA 3 (handoff) → Gmail/log | e2e #5, `test_lead_notification_is_deduplicated` | ✅ (🟡 Gmail login) |
 | Transfer complex chats to humans | Handoff (keyword, complaint, low confidence) | e2e #5-6, `test_escalation_cases` | ✅ |
 | Permitted automated follow-ups | WA 4 + consent, 24h/template rules, approval | e2e #8, `test_follow_up_eligibility` | ✅ |
-| Detect automation errors, handle failures | WA 5 + recovery service | e2e #9, `test_recovery.py`, live drill | ✅ |
+| Detect automation errors, handle failures | WA 5 + recovery service | e2e #9, `test_recovery.py`, live drill, **live n8n-API retries** (TEST_RESULTS) | ✅ |
 | Professional admin dashboard | React + TS + Tailwind, 6 pages | screenshots, 0 console errors | ✅ |
 
 ## 2. Technology stack

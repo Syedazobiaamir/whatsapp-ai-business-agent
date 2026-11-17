@@ -38,7 +38,14 @@ Each critical rule was **deliberately broken** to confirm the suite fails:
 10 identical webhooks **in parallel** → 1 message · 5 parallel AI calls → 1 reply · Urdu / emoji round-trip · 3 MB+ payload → 413 · unsigned or forged webhook → 401, nothing stored · `alg: none` JWT → 401 · SQL-injection / `%` / `<script>` search strings → harmless (parameterised queries) · reply > 4096 chars or blank → 422 · database down → `/health` 503 instead of a crash
 
 ## Not tested (needs real accounts)
-Real Meta delivery and status webhooks · real Gemini answers (the client code is tested against a fake SDK) · Gmail sending (the `log` channel is tested) · n8n automatic execution retry against the real n8n API (tested against a fake n8n).
+Real Meta delivery and status webhooks · real Gemini answers (the client code is tested against a fake SDK) · Gmail sending (the `log` channel is tested).
+
+## Verified live against the real n8n API (2026-11-17)
+With a least-privilege n8n API key (only `workflow:list/read`, `execution:list/read/retry`):
+- The Automation page reads all 6 workflows (active) and the last 20 executions from n8n.
+- **Automatic retry through n8n:** the drill failed (execution #85) → needs approval → an admin approved → the backend called `POST /executions/85/retry` → n8n created **retry executions** (`mode=retry`) → each failure was grouped onto the same error (×4) → after 3 retries the error became **OPEN**.
+- **Exactly 2 alerts**: "APPROVAL NEEDED" at the start and "ACTION NEEDED (x4)" after giving up; none in between.
+- Found during this test: Docker's clock ran **3.7 s ahead** of Windows. The app is unaffected (it writes and compares retry times with the same clock), but tests must not mix the two clocks.
 
 ## Run it yourself
 ```powershell

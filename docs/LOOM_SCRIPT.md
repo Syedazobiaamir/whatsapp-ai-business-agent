@@ -26,13 +26,14 @@ Point at the **activity timeline** and the **Update lead** panel (change status 
 ### 1:30-2:45 · Live message through the whole pipeline
 Terminal:
 ```powershell
-.\scripts\send-test-webhook.ps1 -Url http://127.0.0.1:5690/webhook/whatsapp -WaId 923001239999 -Name "Live Demo" -Text "Do you provide support after launch?"
+.\scripts\send-test-webhook.ps1 -Url http://127.0.0.1:5690/webhook/whatsapp -WaId 923001239999 -Name "Live Demo" -Text "Do you provide support after launch?" -MessageId "wamid.LOOM.1"
 ```
+(The fixed `-MessageId` matters: without it the script invents a new id every run, and the duplicate demo below would not be a duplicate.)
 Switch to **n8n → WA 1 → Executions**, open the newest run.
 > "That's exactly what Meta sends, with a cryptographic signature. n8n forwards the raw bytes, the backend verifies the signature, saves the message, answers Meta in milliseconds, then the AI replies."
 
 Dashboard → **Conversations → Live Demo**: show the reply and its badges (intent, modules, confidence or *fallback*).
-Run the **same command again**.
+Run the **exact same command again** (same `-MessageId`); the terminal shows `"duplicates": 1`.
 > "Meta sometimes delivers the same message twice. The second time nothing happens: the database itself guarantees one reply per message."
 
 ### 2:45-3:45 · Human handoff
@@ -62,7 +63,8 @@ Show the **architecture diagram**, **n8n screenshots**, and **TEST_RESULTS.md**.
 ## Backup plans
 | If… | Do |
 |---|---|
-| No Gemini key | Say "the AI is running in fallback mode: answers come from the FAQ search", which is a feature in itself |
+| No Gemini key | Say "the AI is running in fallback mode: answers come from the FAQ search", which is a feature in itself. The Automation page will also list **"GEMINI_API_KEY is not set"** (one grouped error): point at it, "even a missing AI key is reported, never silent" |
+| Re-recording a segment | Before re-running the live message, delete it: `docker exec wa-agent-postgres psql -U wa_agent -d wa_agent -c "DELETE FROM customers WHERE wa_id='923001239999';"` (or simply rerun `scripts\demo_data.py` and use a new `-MessageId`) |
 | A command fails live | Cut and re-record that segment; Loom lets you trim |
 | n8n asks for login | Use `N8N_OWNER_EMAIL` / `N8N_OWNER_PASSWORD` from `.env` (local only) |
 | You want to reset | `backend\.venv\Scripts\python scripts\demo_data.py` (recreates the demo customers) |

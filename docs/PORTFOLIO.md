@@ -38,4 +38,4 @@ Small businesses lose leads on WhatsApp because nobody answers at night and nobo
 | What would you add next? | Real Meta and Gemini go-live, pgvector semantic search for larger FAQs, multi-language templates, a queue (e.g. Redis) for very high volume, and metrics/tracing (Prometheus/OpenTelemetry). |
 
 ## Honest scope
-Built and tested in mock mode: WhatsApp sending is simulated, and Gemini is exercised through a fake that follows the real SDK interface. Live Meta delivery, live Gemini answers and Gmail sending need accounts (free test tiers are documented). They are listed as "not tested" rather than claimed.
+Built and tested in mock mode: WhatsApp sending is simulated, and Gemini is exercised through a fake that follows the real SDK interface. Automatic retries through the real n8n API were verified live. Live Meta delivery, live Gemini answers and Gmail sending need accounts (free test tiers are documented). They are listed as "not tested" rather than claimed.
